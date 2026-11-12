@@ -233,6 +233,7 @@ mark.ph { background: var(--mark); color: var(--mark-ink); border-radius: 4px; p
 
 .toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 20px); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-weight: 600; font-size: .9rem; opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; z-index: 20; }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
+[hidden] { display: none !important; }
 .sheet { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: grid; place-items: center; z-index: 30; padding: 16px; }
 .sheet > div { background: var(--surface); border-radius: 14px; padding: 16px; width: min(640px, 100%); display: grid; gap: 10px; }
 .sheet textarea { min-height: 260px; font-size: .85rem; }
