@@ -1409,11 +1409,27 @@ MODULES.forEach((m) => m.prompts.forEach((p, i) => { if (!p.pog) p.pog = POG_MAP
     clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("show"), 1800);
   }
   function copy(text, msg) {
-    const fallback = () => { $("#sheetText").value = text; $("#sheet").hidden = false; const ta = $("#sheetText"); ta.focus(); ta.select(); };
+    text = String(text || "");
+    const done = () => toast(msg || "Copied. Paste it into your AI tool.");
+    const legacy = () => {
+      try {
+        const t = document.createElement("textarea");
+        t.value = text; t.setAttribute("readonly", ""); t.style.position = "fixed"; t.style.top = "0"; t.style.left = "0"; t.style.opacity = "0";
+        document.body.appendChild(t); t.focus(); t.select(); t.setSelectionRange(0, text.length);
+        const ok = document.execCommand("copy"); t.remove(); return ok;
+      } catch (e) { return false; }
+    };
+    const fallback = () => {
+      if (legacy()) { done(); return; }
+      const ta = $("#sheetText"); $("#sheet").hidden = false;
+      ta.value = text; ta.textContent = text;
+      requestAnimationFrame(() => { ta.focus(); ta.select(); ta.setSelectionRange(0, text.length); ta.scrollTop = 0; });
+    };
+    if (!text.trim()) { toast("Nothing to copy yet."); return; }
+    if (legacy()) { done(); return; }
     try {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(() => toast(msg || "Copied. Paste it into your AI tool."), fallback);
-      } else fallback();
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback);
+      else fallback();
     } catch (e) { fallback(); }
   }
   $("#sheetClose").addEventListener("click", () => { $("#sheet").hidden = true; });
