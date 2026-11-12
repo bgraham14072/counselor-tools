@@ -1,0 +1,1174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Student Pathways Explorer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: sticky tab bar over one centered column, same tokens as Distinguished Counselor Studio so the two read as a set.
+   Interest styles and Portrait levels get their own semantic colors; cluster cards carry a per-cluster hue stripe. */
+:root {
+  --bg: #eef3f3;
+  --surface: #ffffff;
+  --surface-2: #f6f9f9;
+  --ink: #132426;
+  --muted: #536668;
+  --line: #d4dfe0;
+  --accent: #0b6b67;
+  --accent-ink: #ffffff;
+  --accent-soft: #dbeeec;
+  --mark: #fff1c2;
+  --mark-ink: #5b4300;
+  --good: #23794a; --good-soft: #dcf0e3;
+  --grow: #b26b00; --grow-soft: #fbecd2;
+  --track: #dde7e8;
+  --stripe-l: 45%;
+  --stripe-s: 55%;
+  --shadow: 0 1px 2px rgba(19,36,38,.06), 0 4px 16px rgba(19,36,38,.05);
+  --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Source Sans 3", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1819; --surface: #142224; --surface-2: #192a2c; --ink: #e3eced; --muted: #9db0b2; --line: #284043;
+    --accent: #52c3b9; --accent-ink: #062120; --accent-soft: #163a38; --mark: #4a3d12; --mark-ink: #ffe7a3;
+    --good: #6bcf95; --good-soft: #163524; --grow: #f0b04f; --grow-soft: #3b2b10; --track: #223739;
+    --stripe-l: 66%; --stripe-s: 60%;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.25); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1819; --surface: #142224; --surface-2: #192a2c; --ink: #e3eced; --muted: #9db0b2; --line: #284043;
+  --accent: #52c3b9; --accent-ink: #062120; --accent-soft: #163a38; --mark: #4a3d12; --mark-ink: #ffe7a3;
+  --good: #6bcf95; --good-soft: #163524; --grow: #f0b04f; --grow-soft: #3b2b10; --track: #223739;
+  --stripe-l: 66%; --stripe-s: 60%;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.25); color-scheme: dark;
+}
+html.big { font-size: 20px; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.5; }
+html.big body { font-size: 1rem; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+h1, h2, h3 { font-family: var(--f-display); line-height: 1.15; text-wrap: balance; margin: 0; }
+h2 { font-size: 1.45rem; font-weight: 700; }
+h3 { font-size: 1.08rem; font-weight: 700; }
+p { margin: 0; }
+ul { margin: 0; padding-left: 1.2em; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.eyebrow { font-family: var(--f-mono); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.muted { color: var(--muted); }
+.small { font-size: .88rem; }
+.stack { display: grid; gap: 10px; }
+.stack-lg { display: grid; gap: 16px; }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.row-between { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; }
+
+/* Top bar */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); }
+.top .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; padding-block: 10px 0; }
+.brand { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1 1 260px; }
+.brand-mark { width: 30px; height: 30px; flex: none; }
+.brand h1 { font-size: 1.12rem; font-weight: 700; }
+.brand small { display: block; font-size: .78rem; color: var(--muted); font-family: var(--f-body); font-weight: 400; }
+.tools { display: flex; gap: 6px; flex: none; }
+.tabs { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; width: 100%; margin-left: -4px; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab { flex: none; border: 0; background: none; padding: 10px 12px 12px; font-weight: 600; color: var(--muted); border-bottom: 3px solid transparent; text-decoration: none; font-size: .95rem; }
+.tab[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent); }
+.tab:hover { color: var(--ink); }
+.tab .count { font-family: var(--f-mono); font-size: .7rem; font-weight: 500; margin-left: 4px; color: var(--muted); }
+
+main { padding-block: 22px 64px; }
+.view { display: grid; gap: 18px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; box-shadow: var(--shadow); min-width: 0; }
+.panel-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 16px; margin-bottom: 14px; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--line); background: var(--surface); padding: 8px 14px; border-radius: 999px; font-weight: 600; font-size: .92rem; }
+.btn:hover { border-color: var(--accent); }
+.btn-primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn-primary:hover { filter: brightness(1.08); }
+.btn-ghost { border-color: transparent; background: transparent; color: var(--accent); padding-inline: 6px; }
+.btn-lg { padding: 11px 20px; font-size: 1rem; }
+.btn[disabled] { opacity: .5; cursor: not-allowed; }
+.icon-btn { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 11px; font-weight: 600; font-size: .82rem; }
+.icon-btn[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+
+.banner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; background: var(--mark); color: var(--mark-ink); border-radius: 12px; padding: 12px 16px; font-size: .95rem; }
+.banner .btn { background: transparent; border-color: currentColor; color: inherit; }
+.privacy { display: flex; gap: 12px; align-items: flex-start; background: var(--accent-soft); border-radius: 12px; padding: 14px 16px; }
+.privacy svg { width: 22px; height: 22px; flex: none; margin-top: 2px; color: var(--accent); }
+
+/* Start */
+.hero { display: grid; gap: 18px; grid-template-columns: 1fr; }
+@media (min-width: 820px) { .hero { grid-template-columns: 1.15fr 1fr; } }
+.hero h2 { font-size: clamp(1.6rem, 3.4vw, 2.2rem); }
+.lede { font-size: 1.08rem; max-width: 60ch; }
+.steps { display: grid; gap: 10px; counter-reset: s; list-style: none; padding: 0; margin: 0; }
+.steps li { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: start; }
+.steps li::before { counter-increment: s; content: counter(s); width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); font-weight: 700; font-family: var(--f-display); }
+.band-pick { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.band-pick label { position: relative; display: block; border: 2px solid var(--line); border-radius: 12px; padding: 12px 14px; cursor: pointer; background: var(--surface); }
+.band-pick input { position: absolute; opacity: 0; pointer-events: none; }
+.band-pick label:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+.band-pick label:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
+.band-pick b { display: block; font-family: var(--f-display); font-size: 1.05rem; }
+.cluster-mini { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.cluster-mini span { border: 1px solid var(--line); border-left: 5px solid hsl(var(--h) var(--stripe-s) var(--stripe-l)); border-radius: 8px; padding: 6px 10px; font-size: .86rem; font-weight: 600; background: var(--surface-2); }
+.group-label { margin-top: 4px; }
+
+/* Question cards */
+.progress { height: 8px; background: var(--track); border-radius: 999px; overflow: hidden; }
+.progress > span { display: block; height: 100%; background: var(--accent); border-radius: 999px; transition: width .25s; }
+.qlist { display: grid; gap: 10px; }
+.q { display: grid; gap: 10px; grid-template-columns: 1fr; align-items: center; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: var(--surface); }
+@media (min-width: 760px) { .q { grid-template-columns: 1fr auto; } }
+.qt { font-size: 1.02rem; }
+.q.answered { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 0; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; background: var(--surface-2); }
+.seg label { position: relative; text-align: center; padding: 9px 12px; font-weight: 600; font-size: .9rem; cursor: pointer; color: var(--muted); white-space: nowrap; border-left: 1px solid var(--line); }
+.seg label:first-child { border-left: 0; }
+.seg input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.seg label:has(input:checked) { background: var(--accent); color: var(--accent-ink); }
+.seg label:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: -3px; }
+.seg-4 label { padding-inline: 8px; font-size: .84rem; }
+@media (max-width: 460px) { .seg-4 { grid-auto-flow: row; grid-template-columns: 1fr 1fr; border-radius: 12px; } .seg-4 label:nth-child(3) { border-left: 0; } .seg-4 label:nth-child(n+3) { border-top: 1px solid var(--line); } }
+.pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.attr-head { display: grid; gap: 6px; }
+.attr-head h2 { font-size: 1.6rem; }
+.dots { display: flex; gap: 6px; }
+.dots span { width: 10px; height: 10px; border-radius: 50%; background: var(--track); }
+.dots span.on { background: var(--accent); }
+.dots span.done { background: color-mix(in srgb, var(--accent) 45%, var(--track)); }
+
+/* Results */
+.res-grid { display: grid; gap: 18px; grid-template-columns: 1fr; }
+@media (min-width: 900px) { .res-grid { grid-template-columns: 1fr 1fr; } }
+.bars { display: grid; gap: 10px; }
+.bar { display: grid; grid-template-columns: minmax(96px, 9.5rem) 1fr 2.6rem; gap: 10px; align-items: center; }
+.bar .lbl { font-weight: 600; font-size: .92rem; min-width: 0; }
+.bar .lbl small { display: block; font-weight: 400; color: var(--muted); font-size: .78rem; line-height: 1.3; }
+.bar .trk { height: 12px; background: var(--track); border-radius: 999px; overflow: hidden; }
+.bar .trk span { display: block; height: 100%; border-radius: 999px; background: var(--accent); }
+.bar .val { font-family: var(--f-mono); font-size: .8rem; text-align: right; font-variant-numeric: tabular-nums; }
+.bar.top .trk span { background: var(--accent); }
+.bar.dim .trk span { background: color-mix(in srgb, var(--accent) 40%, var(--track)); }
+.bar.strong .trk span { background: var(--good); }
+.bar.growth .trk span { background: var(--grow); }
+.pill { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 2px 10px; font-size: .78rem; font-weight: 700; white-space: nowrap; }
+.pill-good { background: var(--good-soft); color: var(--good); }
+.pill-grow { background: var(--grow-soft); color: var(--grow); }
+.pill-acc { background: var(--accent-soft); color: var(--accent); }
+.pill-plain { background: var(--surface-2); color: var(--muted); border: 1px solid var(--line); }
+
+.ccards { display: grid; gap: 14px; }
+.ccard { border: 1px solid var(--line); border-top: 6px solid hsl(var(--h) var(--stripe-s) var(--stripe-l)); border-radius: 14px; padding: 16px; background: var(--surface); box-shadow: var(--shadow); display: grid; gap: 12px; min-width: 0; }
+.ccard-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 12px; }
+.ccard-head h3 { font-size: 1.3rem; }
+.rank { font-family: var(--f-mono); font-size: .75rem; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+.cols { display: grid; gap: 14px; grid-template-columns: 1fr; }
+@media (min-width: 700px) { .cols { grid-template-columns: 1fr 1fr; } }
+.cols h4 { margin: 0 0 6px; font-size: .8rem; font-family: var(--f-mono); font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.cols ul { display: grid; gap: 3px; }
+.career { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 10px; padding: 5px 0; border-bottom: 1px dashed var(--line); }
+.career:last-child { border-bottom: 0; }
+.career em { font-style: normal; font-size: .8rem; color: var(--muted); white-space: nowrap; }
+.why { background: var(--surface-2); border-radius: 10px; padding: 10px 12px; font-size: .92rem; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.others { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); }
+.other { border: 1px solid var(--line); border-left: 5px solid hsl(var(--h) var(--stripe-s) var(--stripe-l)); border-radius: 10px; padding: 10px 12px; background: var(--surface-2); display: grid; gap: 2px; }
+.other b { font-size: .95rem; }
+details.all { border-top: 1px solid var(--line); padding-top: 10px; }
+details.all summary { cursor: pointer; font-weight: 600; color: var(--accent); }
+
+.attr-results { display: grid; gap: 12px; }
+.gcard { border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 8px; background: var(--surface); }
+.gcard.strong { border-left: 5px solid var(--good); }
+.gcard.growth { border-left: 5px solid var(--grow); }
+.pick-list { display: grid; gap: 6px; list-style: none; padding: 0; }
+.pick-list label { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line); cursor: pointer; background: var(--surface-2); }
+.pick-list label:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+.pick-list input { margin-top: 4px; accent-color: var(--accent); flex: none; }
+.bridge { background: var(--accent-soft); border-radius: 10px; padding: 10px 12px; font-size: .94rem; }
+.plan { display: grid; gap: 10px; grid-template-columns: 1fr; }
+@media (min-width: 760px) { .plan { grid-template-columns: repeat(3, 1fr); } }
+.plan > div { border: 1px dashed var(--accent); border-radius: 12px; padding: 12px 14px; display: grid; gap: 4px; align-content: start; background: var(--surface); }
+.plan .eyebrow { color: var(--accent); }
+.plan p { font-weight: 600; }
+input[type="text"], textarea, select { font: inherit; color: var(--ink); background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; width: 100%; }
+textarea { min-height: 96px; resize: vertical; }
+.saved-box { border: 2px solid var(--good); background: var(--good-soft); }
+.empty { text-align: center; padding: 28px 18px; display: grid; gap: 12px; justify-items: center; }
+
+/* Counselor guide */
+.qgroup { display: grid; gap: 8px; }
+.qgroup ol { margin: 0; padding-left: 1.3em; display: grid; gap: 6px; }
+.qgroup li::marker { color: var(--accent); font-weight: 700; }
+.prompt-box { font-family: var(--f-mono); font-size: .8rem; line-height: 1.55; white-space: pre-wrap; background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; max-height: 360px; overflow: auto; }
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--f-mono); font-weight: 500; font-size: .74rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.note { border-left: 4px solid var(--grow); background: var(--grow-soft); color: var(--ink); border-radius: 0 10px 10px 0; padding: 10px 14px; font-size: .92rem; }
+.two { display: grid; gap: 18px; grid-template-columns: 1fr; }
+@media (min-width: 860px) { .two { grid-template-columns: 1fr 1fr; } }
+
+.toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 20px); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-weight: 600; font-size: .9rem; opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; z-index: 20; }
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.sheet { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: grid; place-items: center; z-index: 30; padding: 16px; }
+.sheet > div { background: var(--surface); border-radius: 14px; padding: 16px; width: min(640px, 100%); display: grid; gap: 10px; }
+.sheet textarea { min-height: 260px; font-size: .85rem; }
+footer.foot { font-size: .82rem; color: var(--muted); padding-block: 0 40px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="var(--accent)"/><circle cx="16" cy="16" r="9" fill="none" stroke="var(--accent-ink)" stroke-width="2.2"/><path d="M19.8 12.2 L17.6 17.6 L12.2 19.8 L14.4 14.4 Z" fill="var(--accent-ink)"/></svg>
+      <h1>Student Pathways Explorer<small>Career Clusters and the NY Portrait of a Graduate</small></h1>
+    </div>
+    <div class="tools">
+      <button class="icon-btn" id="bigText" type="button" aria-pressed="false" title="Larger text for a projector">Large text</button>
+      <button class="icon-btn" id="resetTop" type="button">Clear all</button>
+    </div>
+    <nav class="tabs" aria-label="Sections">
+      <a class="tab" href="#start" data-view="start">Start</a>
+      <a class="tab" href="#interests" data-view="interests">Interests<span class="count" id="cnt-i"></span></a>
+      <a class="tab" href="#portrait" data-view="portrait">Portrait<span class="count" id="cnt-p"></span></a>
+      <a class="tab" href="#results" data-view="results">My results</a>
+      <a class="tab" href="#counselor" data-view="counselor">Counselor guide</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="sampleBanner" class="banner" hidden>
+    <span><b>These are made-up sample answers</b> so you can see how results look. Clear them before a student begins.</span>
+    <button class="btn" id="clearSample" type="button">Clear sample answers</button>
+  </div>
+  <section class="view" id="view-start"></section>
+  <section class="view" id="view-interests" hidden></section>
+  <section class="view" id="view-portrait" hidden></section>
+  <section class="view" id="view-results" hidden></section>
+  <section class="view" id="view-counselor" hidden></section>
+</main>
+<footer class="foot wrap">Career Clusters follow Advance CTE's modernized National Career Clusters Framework (2024). Portrait of a Graduate attributes are from NYSED (NY Inspires); state guidance is still forthcoming. Interest questions are original and are a conversation starter, not a test. Nothing on this page is saved or sent: closing or reloading the page erases every answer. A PDF a counselor chooses to download exists only where they save it.</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="sheet" id="sheet" hidden>
+  <div role="dialog" aria-modal="true" aria-labelledby="sheet-h">
+    <h3 id="sheet-h">Copy this prompt</h3>
+    <p class="muted">Your browser blocked automatic copying. The text is selected below: press Ctrl+C (or Cmd+C), or long-press to copy.</p>
+    <textarea id="sheetText" readonly autocomplete="off"></textarea>
+    <div><button class="btn btn-primary" id="sheetClose" type="button">Done</button></div>
+  </div>
+</div>
+<script>
+// Student Pathways Explorer data. Career Clusters follow Advance CTE's modernized National Career Clusters Framework (2024).
+// Interest items are original wording, loosely inspired by Holland's six interest types. Not a published instrument.
+
+const STYLES = [
+  { id: "R", name: "Doer", desc: "Likes hands-on work with tools, materials, machines, animals or the outdoors." },
+  { id: "I", name: "Thinker", desc: "Likes figuring out how things work, investigating and solving puzzles." },
+  { id: "A", name: "Creator", desc: "Likes making, designing, performing and expressing ideas in new ways." },
+  { id: "S", name: "Helper", desc: "Likes teaching, caring for, listening to and supporting people." },
+  { id: "E", name: "Persuader", desc: "Likes leading, convincing, starting things and taking charge." },
+  { id: "C", name: "Organizer", desc: "Likes planning, keeping track of details, numbers and systems." }
+];
+
+const EDU = {
+  T: "Short-term training",
+  P: "Apprenticeship",
+  C: "Certificate",
+  A2: "2-year degree",
+  B4: "4-year degree",
+  G: "Advanced degree",
+  V: "Paths vary"
+};
+
+const NY_AREAS = {
+  AG: "Agricultural Education",
+  BM: "Business and Marketing",
+  CS: "Computer Science and Information Technology",
+  FCS: "Family and Consumer Sciences",
+  HS: "Health Sciences",
+  TE: "Technology Education",
+  TT: "Trade and Technical"
+};
+
+const CLUSTERS = [
+  {
+    id: "AM", name: "Advanced Manufacturing", group: "Building & Moving", hue: 210,
+    blurb: "Designing, building and improving the products we use, with robots, 3D printers and precision machines.",
+    former: "Manufacturing; parts of STEM",
+    careers: [["Machinist or CNC operator", "P"], ["Welder", "C"], ["Robotics technician", "A2"], ["Quality inspector", "T"], ["Industrial or manufacturing engineer", "B4"], ["Industrial designer", "B4"]],
+    msCourses: ["Technology or STEM elective", "Makerspace or design class", "Math and science with hands-on labs"],
+    hsCourses: ["Technology education (design and drawing, engineering)", "Physics", "Math through precalculus", "A BOCES or CTE program in welding, machining or precision manufacturing"],
+    clubs: ["Robotics team", "Maker or engineering club", "Science Olympiad or a design challenge"],
+    explore: ["Tour a local manufacturer during Manufacturing Day events in October", "Watch a CNC machine or 3D printer run a real job"],
+    ny: ["TE", "TT"], pog: ["CI", "CT"]
+  },
+  {
+    id: "AG", name: "Agriculture", group: "Cultivating Resources", hue: 120,
+    blurb: "Growing food, caring for animals and plants, and keeping our food supply safe.",
+    former: "Agriculture, Food & Natural Resources",
+    careers: [["Veterinary technician", "A2"], ["Farm or greenhouse manager", "V"], ["Agricultural equipment technician", "C"], ["Food scientist", "B4"], ["Veterinarian", "G"], ["Landscape designer", "A2"]],
+    msCourses: ["Science with life science or plant labs", "Family and consumer sciences (food)", "Any agriculture or environmental elective"],
+    hsCourses: ["Biology and environmental science", "Agricultural science, if offered", "Chemistry", "A BOCES or CTE program in animal science, horticulture or natural resources"],
+    clubs: ["FFA or 4-H", "Garden or greenhouse club", "Environmental or outdoors club"],
+    explore: ["Volunteer at an animal shelter, farm or community garden", "Visit a county fair or a local farm market and talk with growers"],
+    ny: ["AG"], pog: ["GC", "AP"]
+  },
+  {
+    id: "AED", name: "Arts, Entertainment & Design", group: "Creating & Experiencing", hue: 330,
+    blurb: "Making art, music, media, games, fashion and designs that people see, hear and use.",
+    former: "Arts, A/V Technology & Communications",
+    careers: [["Graphic designer", "B4"], ["Video editor or filmmaker", "V"], ["Animator", "B4"], ["Musician or performer", "V"], ["Sound or lighting technician", "A2"], ["User experience (UX) designer", "B4"]],
+    msCourses: ["Art and music electives", "Chorus, band or orchestra", "Digital media or video class"],
+    hsCourses: ["Studio art, media arts or photography", "Music theory, band, chorus or theater", "Computer graphics or web design", "A BOCES or CTE program in digital media or visual communications"],
+    clubs: ["Drama club or the school musical", "Art club, yearbook or student film club", "Stage crew"],
+    explore: ["Build a small portfolio of your best work", "Take a summer art, music or film workshop"],
+    ny: ["TE", "FCS", "TT"], pog: ["CI", "EC"]
+  },
+  {
+    id: "CON", name: "Construction", group: "Building & Moving", hue: 30,
+    blurb: "Planning and building homes, schools, roads and bridges, and keeping them running.",
+    former: "Architecture & Construction",
+    careers: [["Electrician", "P"], ["Carpenter", "P"], ["Plumber or pipefitter", "P"], ["HVAC technician", "C"], ["Construction manager", "B4"], ["Architect or civil engineer", "B4"]],
+    msCourses: ["Technology or shop class", "Math (measurement and geometry)", "STEM elective"],
+    hsCourses: ["Technology education (construction, drafting or CAD)", "Geometry and physics", "A BOCES or CTE program in carpentry, electrical, HVAC or construction trades"],
+    clubs: ["Habitat for Humanity or a build-for-service project", "SkillsUSA", "Stage crew (building sets)"],
+    explore: ["Ask a tradesperson about apprenticeships and what a day looks like", "Help with a home or community building project"],
+    ny: ["TE", "TT"], pog: ["CT", "AP"]
+  },
+  {
+    id: "DT", name: "Digital Technology", group: "Connecting & Supporting Success", hue: 250, cross: true,
+    blurb: "Writing code, building apps and games, protecting data, and keeping computers and networks running.",
+    former: "Information Technology; parts of STEM",
+    careers: [["Software developer", "B4"], ["IT support specialist", "C"], ["Cybersecurity analyst", "B4"], ["Game developer", "B4"], ["Network technician", "A2"], ["Data analyst", "B4"]],
+    msCourses: ["Computer science or coding elective", "STEM or robotics class", "Math"],
+    hsCourses: ["Computer science (including AP options, if offered)", "Web design or app development", "Statistics", "A BOCES or CTE program in IT, networking or cybersecurity"],
+    clubs: ["Coding or computer science club", "Robotics team", "Esports or game design club", "A cybersecurity competition"],
+    explore: ["Try a free coding tutorial and build one small project", "Help a family member or teacher fix a tech problem"],
+    ny: ["CS"], pog: ["CT", "CI"]
+  },
+  {
+    id: "EDU", name: "Education", group: "Caring for Communities", hue: 45,
+    blurb: "Teaching, coaching and supporting learners of every age, from child care to college.",
+    former: "Education & Training",
+    careers: [["Teacher", "B4"], ["Teaching assistant", "T"], ["Child care provider or center director", "V"], ["School counselor", "G"], ["Coach or athletic trainer", "V"], ["Corporate trainer", "B4"]],
+    msCourses: ["Family and consumer sciences (child development)", "Any class where you can help others learn", "English (presenting and explaining)"],
+    hsCourses: ["Child development or early childhood education", "Psychology", "Public speaking", "A teaching or education pathway program, if offered"],
+    clubs: ["Peer tutoring or mentoring", "Future educators club", "Helping coach a youth team or camp"],
+    explore: ["Volunteer in a classroom, library program or summer camp", "Babysit or help with a younger sibling's homework"],
+    ny: ["FCS"], pog: ["EC", "RF"]
+  },
+  {
+    id: "ENR", name: "Energy & Natural Resources", group: "Cultivating Resources", hue: 160,
+    blurb: "Protecting the environment and producing energy, from solar and wind to clean water.",
+    former: "Agriculture, Food & Natural Resources; parts of STEM",
+    careers: [["Environmental scientist", "B4"], ["Solar panel installer", "T"], ["Wind turbine technician", "C"], ["Park ranger or forester", "B4"], ["Water treatment operator", "C"], ["Utility lineworker", "P"]],
+    msCourses: ["Earth science and life science", "Environmental or STEM elective", "Math"],
+    hsCourses: ["Earth and space sciences and environmental science", "Chemistry and physics", "A BOCES or CTE program in natural resources or electrical trades"],
+    clubs: ["Environmental or sustainability club", "Envirothon team", "Outdoors or hiking club"],
+    explore: ["Join a stream cleanup or tree planting", "Visit a nature center, state park or energy site and ask about careers"],
+    ny: ["AG", "TE", "TT"], pog: ["GC", "CT"]
+  },
+  {
+    id: "FIN", name: "Financial Services", group: "Investing in the Future", hue: 180,
+    blurb: "Helping people and businesses manage, save, invest and protect their money.",
+    former: "Finance",
+    careers: [["Bank teller", "T"], ["Accountant", "B4"], ["Financial advisor", "B4"], ["Insurance agent", "T"], ["Loan officer", "B4"], ["Actuary", "B4"]],
+    msCourses: ["Math", "Business or personal finance elective", "Family and consumer sciences (budgeting)"],
+    hsCourses: ["Personal finance or economics", "Accounting", "Statistics and advanced math", "A business program at your school or BOCES"],
+    clubs: ["FBLA or DECA", "Investment or stock market club", "Being treasurer for a club"],
+    explore: ["Make a real budget for something you want to buy", "Try a stock market simulation game"],
+    ny: ["BM"], pog: ["AP", "CT"]
+  },
+  {
+    id: "HHS", name: "Healthcare & Human Services", group: "Caring for Communities", hue: 0,
+    blurb: "Keeping people healthy and helping families and communities through hard times.",
+    former: "Health Science; Human Services",
+    careers: [["Registered nurse", "A2"], ["Medical assistant", "C"], ["Physical therapist", "G"], ["Dental hygienist", "A2"], ["Social worker", "B4"], ["Pharmacist or physician", "G"]],
+    msCourses: ["Life science and health", "Family and consumer sciences", "Math and science"],
+    hsCourses: ["Biology, chemistry and anatomy and physiology", "Health and psychology", "A BOCES or CTE program in health occupations or nursing assistant training"],
+    clubs: ["HOSA (future health professionals)", "Red Cross or blood drive club", "Peer helpers or a kindness club"],
+    explore: ["Volunteer at a hospital, senior center or food pantry", "Learn CPR and first aid"],
+    ny: ["HS", "FCS"], pog: ["GC", "EC"]
+  },
+  {
+    id: "HOSP", name: "Hospitality, Events & Tourism", group: "Creating & Experiencing", hue: 20,
+    blurb: "Cooking, hosting and planning great experiences, from restaurants and hotels to concerts and trips.",
+    former: "Hospitality & Tourism",
+    careers: [["Chef or baker", "V"], ["Event planner", "B4"], ["Hotel or restaurant manager", "B4"], ["Travel agent", "T"], ["Tour or recreation guide", "T"], ["Sports and venue operations", "B4"]],
+    msCourses: ["Family and consumer sciences (foods)", "World languages", "Social studies (geography)"],
+    hsCourses: ["Culinary arts or foods and nutrition", "World languages", "Business and marketing", "A BOCES or CTE program in culinary arts or hospitality"],
+    clubs: ["Culinary or baking club", "Event committee for a dance or fundraiser", "World language or travel club"],
+    explore: ["Help plan a family event or school fundraiser", "Ask a restaurant or hotel manager how they got started"],
+    ny: ["FCS", "BM", "TT"], pog: ["EC", "GC"]
+  },
+  {
+    id: "MGT", name: "Management & Entrepreneurship", group: "Connecting & Supporting Success", hue: 280, cross: true,
+    blurb: "Starting and running businesses and organizations, and keeping teams and projects on track.",
+    former: "Business Management & Administration",
+    careers: [["Small business owner", "V"], ["Office or operations manager", "B4"], ["Project manager", "B4"], ["Human resources specialist", "B4"], ["Administrative assistant", "T"], ["Nonprofit director", "B4"]],
+    msCourses: ["Business or entrepreneurship elective", "Math", "English (writing and presenting)"],
+    hsCourses: ["Business, management or entrepreneurship", "Economics", "Public speaking", "A business program at your school or BOCES"],
+    clubs: ["FBLA or DECA", "Student council", "Running a school store or fundraiser"],
+    explore: ["Start a small business idea, like a pet-sitting or lawn service", "Interview a local business owner"],
+    ny: ["BM"], pog: ["RF", "EC"]
+  },
+  {
+    id: "MS", name: "Marketing & Sales", group: "Connecting & Supporting Success", hue: 300, cross: true,
+    blurb: "Telling the story of a product or cause and helping people find what they need.",
+    former: "Marketing",
+    careers: [["Marketing specialist", "B4"], ["Social media manager", "B4"], ["Sales representative", "V"], ["Market research analyst", "B4"], ["Real estate agent", "T"], ["Retail store manager", "V"]],
+    msCourses: ["Business elective", "Art or digital media", "English (persuasive writing)"],
+    hsCourses: ["Marketing", "Digital media or graphic design", "Psychology", "A business and marketing program at your school or BOCES"],
+    clubs: ["DECA", "School newspaper, yearbook or social media team", "Debate club"],
+    explore: ["Design a poster or post for a school event", "Notice the ads you see this week and ask why they work"],
+    ny: ["BM"], pog: ["EC", "CI"]
+  },
+  {
+    id: "PSS", name: "Public Service & Safety", group: "Caring for Communities", hue: 225,
+    blurb: "Keeping communities safe and fair through law, government, emergency response and the military.",
+    former: "Law, Public Safety, Corrections & Security; Government & Public Administration",
+    careers: [["Police officer", "T"], ["Firefighter", "T"], ["Paramedic or EMT", "C"], ["911 dispatcher", "T"], ["Paralegal", "A2"], ["Lawyer or city planner", "G"]],
+    msCourses: ["Social studies", "Health", "English (argument writing)"],
+    hsCourses: ["Participation in government and economics", "Criminal justice or law, if offered", "Health and first aid", "A BOCES or CTE program in criminal justice, fire science or EMT"],
+    clubs: ["Mock trial or Model UN", "Student council", "Explorer post or a youth fire or EMS program"],
+    explore: ["Attend a town board or school board meeting", "Visit a fire hall or police open house"],
+    ny: ["TT"], pog: ["GC", "CT"]
+  },
+  {
+    id: "SC", name: "Supply Chain & Transportation", group: "Building & Moving", hue: 195,
+    blurb: "Moving people and goods by road, rail, air and sea, and fixing the vehicles that do it.",
+    former: "Transportation, Distribution & Logistics",
+    careers: [["Automotive or diesel technician", "C"], ["Aircraft mechanic", "C"], ["Pilot", "V"], ["Truck driver", "T"], ["Logistics coordinator", "B4"], ["Drone operator", "T"]],
+    msCourses: ["Technology or STEM elective", "Math", "Social studies (geography)"],
+    hsCourses: ["Technology education", "Physics", "A BOCES or CTE program in automotive, collision, diesel or aviation"],
+    clubs: ["SkillsUSA", "Drone or aviation club", "Robotics team"],
+    explore: ["Help with basic car or bike maintenance", "Watch how a package travels by tracking a delivery"],
+    ny: ["TT", "TE"], pog: ["CT", "AP"]
+  }
+];
+
+// [text, primary cluster, secondary cluster or null, interest style]
+const ITEMS = [
+  ["Take apart a gadget to see how it works", "AM", "SC", "R"],
+  ["Design something and then build it with a 3D printer or tools", "AM", "AED", "R"],
+  ["Find a way to make a process faster or with less waste", "AM", "MGT", "C"],
+  ["Grow plants or help with a garden", "AG", null, "R"],
+  ["Take care of animals", "AG", null, "R"],
+  ["Learn where food comes from and how it is kept safe to eat", "AG", "HOSP", "I"],
+  ["Draw, paint or design graphics", "AED", null, "A"],
+  ["Perform on stage, play music or make videos", "AED", null, "A"],
+  ["Design how a room, an outfit or an app should look", "AED", "DT", "A"],
+  ["Build things with wood or tools", "CON", null, "R"],
+  ["Sketch a house or building and plan how it would be built", "CON", "AED", "A"],
+  ["Work outside on a project you can see grow day by day", "CON", "ENR", "R"],
+  ["Write code or create a game or website", "DT", null, "I"],
+  ["Fix a computer or set up a new device or Wi-Fi", "DT", null, "R"],
+  ["Figure out how to keep accounts and data safe from hackers", "DT", "PSS", "I"],
+  ["Explain something to a classmate who is stuck", "EDU", null, "S"],
+  ["Help younger kids learn or play", "EDU", "HHS", "S"],
+  ["Coach or lead a team, club or camp group", "EDU", "MGT", "S"],
+  ["Study weather, rocks, water or the environment", "ENR", null, "I"],
+  ["Find ways to save energy or use solar and wind power", "ENR", "CON", "I"],
+  ["Hike, explore parks or help protect wildlife", "ENR", "AG", "R"],
+  ["Keep track of money, budgets or savings", "FIN", null, "C"],
+  ["Learn how banks, investing or insurance work", "FIN", "MGT", "C"],
+  ["Solve math problems that use real-world numbers", "FIN", null, "I"],
+  ["Learn how the human body works", "HHS", null, "I"],
+  ["Take care of someone who is sick or hurt", "HHS", null, "S"],
+  ["Listen to friends and help them work through a problem", "HHS", "EDU", "S"],
+  ["Cook or bake for other people", "HOSP", null, "R"],
+  ["Plan a party, trip or event", "HOSP", "MGT", "E"],
+  ["Make visitors or new students feel welcome", "HOSP", "EDU", "S"],
+  ["Start a small business or side hustle", "MGT", "MS", "E"],
+  ["Organize a group project and keep everyone on track", "MGT", null, "C"],
+  ["Come up with a new idea and figure out how to make it real", "MGT", "AM", "E"],
+  ["Convince people to support an idea or a cause", "MS", "PSS", "E"],
+  ["Create ads, posters or social media posts", "MS", "AED", "A"],
+  ["Figure out what people want to buy and why", "MS", null, "I"],
+  ["Stand up for what is fair and help settle disagreements", "PSS", null, "S"],
+  ["Stay calm and act fast in an emergency", "PSS", "HHS", "R"],
+  ["Learn how laws and government work", "PSS", null, "E"],
+  ["Work on cars, bikes, engines or drones", "SC", "AM", "R"],
+  ["Figure out the fastest route or how packages get delivered", "SC", null, "C"],
+  ["Learn how planes, trains, ships or trucks work", "SC", null, "I"]
+];
+
+// New York State Portrait of a Graduate (NY Inspires), attribute names as published by NYSED.
+const POG = [
+  { id: "AP", name: "Academically Prepared", desc: "A strong foundation in the learning standards and the knowledge and skills for college, careers, civic life and beyond.",
+    items: ["I keep up with my classwork and ask for help when I'm stuck.", "I can use what I learned in one class in another class.", "I study in ways that actually help me remember."],
+    steps: ["Use a planner for one class for a month and notice what changes.", "Try a study method like quizzing yourself or teaching it to someone.", "Go to extra help once before your next big test.", "Look at next year's courses and pick one that stretches you."],
+    clubs: ["Academic team or quiz bowl", "Peer tutoring", "Honor society service projects"] },
+  { id: "CI", name: "Creative Innovator", desc: "Uses imagination, curiosity and flexible thinking to solve problems, create new ideas and adapt to change.",
+    items: ["I come up with more than one way to solve a problem.", "I try new ideas even if they might not work the first time.", "I use feedback to make something I made better."],
+    steps: ["Start a passion project: build, design or write something just for you.", "Ask a teacher if you can show what you learned in a new way on one assignment.", "Enter a design challenge, science fair or creative problem-solving contest.", "Try a maker, art, robotics or design club."],
+    clubs: ["Maker or robotics club", "Art, music or drama", "Design or invention challenges"] },
+  { id: "CT", name: "Critical Thinker", desc: "Analyzes information, weighs evidence and connects ideas across subjects to work on complex issues.",
+    items: ["I check whether information is true before I believe it or share it.", "I can explain why I think something, using evidence.", "I can look at a problem from more than one side."],
+    steps: ["Before you share a post, check it against two other sources.", "Use claim, evidence and reasoning in your next essay or lab report.", "Ask 'How do we know that?' once in a class discussion this week.", "Try debate, mock trial, Model UN or chess club."],
+    clubs: ["Debate or mock trial", "Model UN", "Chess or strategy games club"] },
+  { id: "EC", name: "Effective Communicator", desc: "Expresses ideas clearly in speech, writing and media, and listens to diverse audiences.",
+    items: ["I can explain my ideas clearly when I speak.", "I can write so other people understand what I mean.", "I really listen when people share ideas different from mine."],
+    steps: ["Volunteer to present for your group on the next project.", "Write for the school paper, yearbook or a club newsletter.", "Practice listening: sum up what someone said before you reply.", "Try drama, speech or the morning announcements."],
+    clubs: ["Drama or speech", "School newspaper or yearbook", "Student news or announcements"] },
+  { id: "GC", name: "Global Citizen", desc: "Acts responsibly and ethically in local, global and digital communities.",
+    items: ["I treat people with different backgrounds and views with respect.", "I help out in my school or community.", "I act responsibly and kindly online."],
+    steps: ["Volunteer once this month with a school or community group.", "Join student council, a service club or a culture club.", "Learn more about a culture or place different from your own.", "Review your posts and privacy settings with a digital-citizenship checklist."],
+    clubs: ["Community service club", "Student council", "Culture or world language club"] },
+  { id: "RF", name: "Reflective and Future Focused", desc: "Reflects on strengths and growth, sets goals, keeps supportive relationships and makes responsible decisions for well-being.",
+    items: ["I can name my strengths and the things I want to get better at.", "I set goals and take steps to reach them.", "I know how to handle stress and who I can go to for support."],
+    steps: ["Set one goal for the next month and check in on it every two weeks.", "Meet with your counselor to plan next year's courses.", "Write a short reflection each week: what went well and what's next.", "Name two trusted adults you can go to for advice."],
+    clubs: ["Mentoring programs", "Leadership or wellness club", "Job shadow or career day"] }
+];
+
+const PORTRAIT_SCALE = ["Not yet", "Sometimes", "Usually", "Almost always"];
+const INTEREST_SCALE = ["Not me", "Maybe", "That's me"];
+
+// Made-up sample used only to demonstrate the page. Not a real student.
+const SAMPLE = {
+  band: "hs",
+  interests: [2,2,1, 0,1,0, 1,0,2, 1,2,1, 2,2,1, 1,0,1, 1,1,0, 0,0,1, 1,0,1, 0,1,0, 1,2,2, 0,1,0, 0,0,1, 2,1,2],
+  portrait: [3,3,2, 4,3,3, 3,2,3, 2,2,3, 3,2,3, 2,2,3]
+};
+// Student Pathways Explorer app. All answers live in memory only: no storage, no network, no names.
+(function () {
+  "use strict";
+  const $ = (s, r = document) => r.querySelector(s);
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const CL = Object.fromEntries(CLUSTERS.map((c) => [c.id, c]));
+  const PG = Object.fromEntries(POG.map((a) => [a.id, a]));
+  const ST = Object.fromEntries(STYLES.map((s) => [s.id, s]));
+  const PER_PAGE = 6;
+
+  // Interleave items so neighbors come from different clusters.
+  const ORDER = [];
+  for (let k = 0; k < 3; k++) for (let c = 0; c < CLUSTERS.length; c++) ORDER.push(c * 3 + k);
+  const I_PAGES = Math.ceil(ORDER.length / PER_PAGE);
+  const P_ITEMS = POG.flatMap((a) => a.items.map((t, j) => ({ attr: a.id, text: t, j })));
+
+  const REFLECT = {
+    AP: "Think of something that was hard to learn at first. What helped it click?",
+    CI: "When did you make or fix something in your own way?",
+    CT: "When did you change your mind because of new evidence?",
+    EC: "When did someone really understand an idea you explained?",
+    GC: "When did you help someone or make your school or community better?",
+    RF: "What is one goal you reached, and how did you get there?"
+  };
+  const EVIDENCE = {
+    AP: "a grade goal you met or a project you're proud of",
+    CI: "something you designed, built, wrote or performed",
+    CT: "a lab, essay or debate where you used evidence",
+    EC: "a presentation, piece of writing or video you made",
+    GC: "a service project, club role or time you helped someone",
+    RF: "a goal you set and reached, and what you learned"
+  };
+
+  function fresh() {
+    return { band: "hs", interests: Array(ITEMS.length).fill(null), portrait: Array(P_ITEMS.length).fill(null), iPage: 0, pPage: 0, sample: false, notes: "", label: "", saved: false, plan: { cluster: null, action: null, goal: null } };
+  }
+  let S = fresh();
+
+  // ---------- scoring ----------
+  function answered(arr) { return arr.filter((v) => v !== null).length; }
+  function clusterScores() {
+    return CLUSTERS.map((c, ci) => {
+      let num = 0, den = 0, primary = 0;
+      ITEMS.forEach((it, i) => {
+        const w = it[1] === c.id ? 1 : it[2] === c.id ? 0.5 : 0;
+        if (!w) return;
+        den += 2 * w;
+        const r = S.interests[i] || 0;
+        num += r * w;
+        if (w === 1) primary += r;
+      });
+      return { id: c.id, pct: Math.round((100 * num) / den), primary, ci };
+    }).sort((a, b) => b.pct - a.pct || b.primary - a.primary || a.ci - b.ci);
+  }
+  function styleScores() {
+    return STYLES.map((s, si) => {
+      const idx = ITEMS.map((it, i) => (it[3] === s.id ? i : -1)).filter((i) => i >= 0);
+      const sum = idx.reduce((t, i) => t + (S.interests[i] || 0), 0);
+      return { id: s.id, pct: Math.round((100 * sum) / (2 * idx.length)), si };
+    }).sort((a, b) => b.pct - a.pct || a.si - b.si);
+  }
+  function portraitScores() {
+    const out = POG.map((a, ai) => {
+      const vals = P_ITEMS.map((p, i) => (p.attr === a.id ? S.portrait[i] : null)).filter((v) => v !== null);
+      const avg = vals.length ? vals.reduce((t, v) => t + v, 0) / vals.length : null;
+      return { id: a.id, avg, n: vals.length, ai };
+    });
+    const rated = out.filter((o) => o.avg !== null);
+    const byHigh = [...rated].sort((a, b) => b.avg - a.avg || a.ai - b.ai);
+    const strengths = byHigh.slice(0, Math.min(2, Math.floor(rated.length / 2))).map((o) => o.id);
+    const byLow = [...rated].sort((a, b) => a.avg - b.avg || a.ai - b.ai).filter((o) => !strengths.includes(o.id));
+    const growth = byLow.slice(0, Math.min(2, byLow.length)).map((o) => o.id);
+    const spread = rated.length ? byHigh[0].avg - byHigh[byHigh.length - 1].avg : 0;
+    return { list: out, rated: rated.length, strengths, growth, flat: rated.length >= 3 && spread < 0.5 };
+  }
+  function results() {
+    const ia = answered(S.interests), pa = answered(S.portrait);
+    const cs = clusterScores(), ss = styleScores(), ps = portraitScores();
+    const iReady = ia >= Math.ceil(ITEMS.length / 2) && cs[0].pct > 0;
+    const pReady = ps.rated >= 3;
+    return { ia, pa, cs, ss, ps, iReady, pReady, top: iReady ? cs.slice(0, 3).filter((c) => c.pct > 0).map((c) => c.id) : [] };
+  }
+
+  // ---------- small UI helpers ----------
+  let toastT;
+  function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 2200); }
+  function copy(text) {
+    const done = () => toast("Copied");
+    const fail = () => { const sh = $("#sheet"); $("#sheetText").value = text; sh.hidden = false; $("#sheetText").focus(); $("#sheetText").select(); };
+    try { navigator.clipboard.writeText(text).then(done, fail); } catch (e) { fail(); }
+  }
+  const pct = (v) => `<span style="width:${Math.max(0, Math.min(100, v))}%"></span>`;
+  function seg(name, scale, value, cls) {
+    return `<div class="seg ${cls || ""}">${scale.map((lab, v) => {
+      const val = cls === "seg-4" ? v + 1 : v;
+      return `<label><input type="radio" name="${name}" value="${val}" ${value === val ? "checked" : ""} autocomplete="off">${esc(lab)}</label>`;
+    }).join("")}</div>`;
+  }
+  function counts() {
+    $("#cnt-i").textContent = `${answered(S.interests)}/${ITEMS.length}`;
+    $("#cnt-p").textContent = `${answered(S.portrait)}/${P_ITEMS.length}`;
+    $("#sampleBanner").hidden = !S.sample;
+  }
+
+  // ---------- views ----------
+  const PRIVACY = `<div class="privacy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg><p><b>Private by design.</b> There's no place for a name, and nothing is saved or sent anywhere. Answers stay on this screen only until you press Clear all, close the page or reload it.</p></div>`;
+
+  function viewStart() {
+    const groups = [...new Set(CLUSTERS.map((c) => c.group))];
+    $("#view-start").innerHTML = `
+      <div class="hero">
+        <div class="panel stack-lg">
+          <p class="eyebrow">For students, with your school counselor</p>
+          <h2>What could your future look like?</h2>
+          <p class="lede">Answer quick questions about things you like to do. You'll see which career areas match your interests, what classes and clubs connect to them, and which Portrait of a Graduate strengths you already have.</p>
+          <ol class="steps">
+            <li><div><b>Interests</b> <span class="muted">· 42 quick questions, about 8 minutes</span><br>Rate activities from "Not me" to "That's me." There are no wrong answers.</div></li>
+            <li><div><b>Portrait of a Graduate</b> <span class="muted">· 18 questions, about 5 minutes</span><br>Reflect on six attributes New York wants every graduate to have.</div></li>
+            <li><div><b>Your results</b><br>See your top career clusters, your strengths and growth areas, and build a next-step plan with your counselor.</div></li>
+          </ol>
+          <div class="stack">
+            <p class="eyebrow" id="band-l">I'm in</p>
+            <div class="band-pick" role="radiogroup" aria-labelledby="band-l">
+              <label><input type="radio" name="band" value="ms" ${S.band === "ms" ? "checked" : ""} autocomplete="off"><b>Middle school</b><span class="muted small">Grades 6 to 8</span></label>
+              <label><input type="radio" name="band" value="hs" ${S.band === "hs" ? "checked" : ""} autocomplete="off"><b>High school</b><span class="muted small">Grades 9 to 12</span></label>
+            </div>
+          </div>
+          <div class="row">
+            <button class="btn btn-primary btn-lg" type="button" data-go="interests">Start the interest questions</button>
+            <button class="btn" type="button" id="loadSample">See a sample result</button>
+          </div>
+          ${PRIVACY}
+        </div>
+        <div class="panel stack">
+          <div class="panel-head" style="margin:0"><h3>14 career clusters to explore</h3><span class="eyebrow">Advance CTE, 2024</span></div>
+          <p class="muted small">Career clusters group jobs that use similar interests and skills. Each one includes careers that start after high school, after training or an apprenticeship, and after college.</p>
+          ${groups.map((g) => `<p class="eyebrow group-label">${esc(g)}</p><div class="cluster-mini">${CLUSTERS.filter((c) => c.group === g).map((c) => `<span style="--h:${c.hue}">${esc(c.name)}</span>`).join("")}</div>`).join("")}
+        </div>
+      </div>`;
+  }
+
+  function viewInterests() {
+    const start = S.iPage * PER_PAGE, ids = ORDER.slice(start, start + PER_PAGE);
+    const done = answered(S.interests), last = S.iPage === I_PAGES - 1;
+    $("#view-interests").innerHTML = `
+      <div class="panel stack-lg">
+        <div class="row-between">
+          <div class="stack" style="gap:4px"><p class="eyebrow">Interests · page ${S.iPage + 1} of ${I_PAGES}</p><h2>How much would you enjoy this?</h2></div>
+          <p class="muted small" id="i-done">${done} of ${ITEMS.length} answered</p>
+        </div>
+        <div class="progress" aria-hidden="true"><span id="i-bar" style="width:${(100 * done) / ITEMS.length}%"></span></div>
+        <p class="muted">Go with your first reaction. If you haven't tried it, imagine doing it.</p>
+        <div class="qlist">${ids.map((i) => `
+          <div class="q ${S.interests[i] !== null ? "answered" : ""}" role="radiogroup" aria-labelledby="qt-${i}" data-q="${i}">
+            <p class="qt" id="qt-${i}"><b>${esc(ITEMS[i][0])}</b></p>
+            ${seg(`i-${i}`, INTEREST_SCALE, S.interests[i])}
+          </div>`).join("")}</div>
+        <div class="pager">
+          <button class="btn" type="button" id="iPrev" ${S.iPage === 0 ? "disabled" : ""}>Back</button>
+          <button class="btn btn-primary" type="button" id="iNext">${last ? "Next: Portrait of a Graduate" : "Next"}</button>
+        </div>
+      </div>`;
+  }
+
+  function viewPortrait() {
+    const a = POG[S.pPage], last = S.pPage === POG.length - 1;
+    const idx = P_ITEMS.map((p, i) => (p.attr === a.id ? i : -1)).filter((i) => i >= 0);
+    $("#view-portrait").innerHTML = `
+      <div class="panel stack-lg">
+        <div class="row-between">
+          <p class="eyebrow">Portrait of a Graduate · ${S.pPage + 1} of ${POG.length}</p>
+          <div class="dots" aria-hidden="true">${POG.map((x, k) => {
+            const ix = P_ITEMS.map((p, i) => (p.attr === x.id ? i : -1)).filter((i) => i >= 0);
+            const full = ix.every((i) => S.portrait[i] !== null);
+            return `<span class="${k === S.pPage ? "on" : full ? "done" : ""}"></span>`;
+          }).join("")}</div>
+        </div>
+        <div class="attr-head"><h2>${esc(a.name)}</h2><p class="lede">${esc(a.desc)}</p></div>
+        <p class="why"><b>Think about it:</b> ${esc(REFLECT[a.id])}</p>
+        <p class="muted">How true is each statement for you right now?</p>
+        <div class="qlist">${idx.map((i) => `
+          <div class="q ${S.portrait[i] !== null ? "answered" : ""}" role="radiogroup" aria-labelledby="pt-${i}" data-p="${i}">
+            <p class="qt" id="pt-${i}"><b>${esc(P_ITEMS[i].text)}</b></p>
+            ${seg(`p-${i}`, PORTRAIT_SCALE, S.portrait[i], "seg-4")}
+          </div>`).join("")}</div>
+        <div class="pager">
+          <button class="btn" type="button" id="pPrev">Back</button>
+          <button class="btn btn-primary" type="button" id="pNext">${last ? "See my results" : "Next attribute"}</button>
+        </div>
+        <p class="muted small">Aligned to New York's Portrait of a Graduate as currently published. State guidance on how students show these attributes is still forthcoming.</p>
+      </div>`;
+  }
+
+  function careerList(c) {
+    return c.careers.map(([n, e]) => `<li class="career"><span>${esc(n)}</span><em>${esc(EDU[e])}</em></li>`).join("");
+  }
+  function whyText(c) {
+    const yes = [], maybe = [];
+    ITEMS.forEach((it, i) => { if (it[1] === c.id || it[2] === c.id) { if (S.interests[i] === 2) yes.push(it[0]); else if (S.interests[i] === 1) maybe.push(it[0]); } });
+    const list = (yes.length ? yes : maybe).slice(0, 3).map((t) => t.charAt(0).toLowerCase() + t.slice(1));
+    if (!list.length) return "";
+    return `<p class="why"><b>${yes.length ? "You said you'd enjoy" : "You said you might enjoy"}:</b> ${esc(list.join("; "))}.</p>`;
+  }
+  function clusterCard(id, rank, score) {
+    const c = CL[id], courses = S.band === "ms" ? c.msCourses : c.hsCourses;
+    return `<article class="ccard" style="--h:${c.hue}">
+      <div class="ccard-head"><div><p class="rank">Match ${rank} · ${score}%</p><h3>${esc(c.name)}</h3></div>
+        <div class="tags">${c.cross ? `<span class="pill pill-plain">Cross-cutting</span>` : ""}<span class="pill pill-acc">${esc(c.group)}</span></div></div>
+      <p>${esc(c.blurb)}</p>
+      ${whyText(c)}
+      <div class="cols">
+        <div><h4>Sample careers · typical path</h4><ul class="pick-plain" style="list-style:none;padding:0">${careerList(c)}</ul></div>
+        <div class="stack">
+          <div><h4>${S.band === "ms" ? "Classes to try in middle school" : "High school courses to consider"}</h4><ul>${courses.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>
+          <div><h4>Clubs and activities</h4><ul>${c.clubs.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>
+          <div><h4>Ways to explore</h4><ul>${c.explore.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>
+        </div>
+      </div>
+      <p class="muted small">NY CTE area to ask about: ${c.ny.map((k) => esc(NY_AREAS[k])).join(", ")}. Builds Portrait attributes: ${c.pog.map((k) => esc(PG[k].name)).join(", ")}.</p>
+    </article>`;
+  }
+
+  function viewResults() {
+    const R = results();
+    const el = $("#view-results");
+    if (!R.iReady && !R.pReady) {
+      el.innerHTML = `<div class="panel empty"><h2>Your results will show up here</h2><p class="muted">${R.ia >= Math.ceil(ITEMS.length / 2) ? "Every activity got \"Not me.\" Try \"Maybe\" for anything you'd be willing to try once, or rate three Portrait attributes." : "Answer at least half of the interest questions or three Portrait attributes to see results."}</p>
+        <div class="row" style="justify-content:center"><button class="btn btn-primary" type="button" data-go="interests">Go to the interest questions</button><button class="btn" type="button" id="loadSample2">See a sample result</button></div></div>`;
+      return;
+    }
+    const maxStyle = Math.max(1, R.ss[0].pct);
+    const styleTop = R.ss.slice(0, 2).map((s) => s.id);
+    let html = "";
+    // Interests
+    if (R.iReady) {
+      const others = R.cs.slice(3, 6).filter((c) => c.pct > 0);
+      html += `<div class="panel stack-lg">
+        <div class="panel-head" style="margin:0"><h2>Your top career clusters</h2><span class="muted small">${R.ia} of ${ITEMS.length} interest questions answered${R.ia < ITEMS.length ? ` · <a href="#interests" data-go="interests">finish the rest</a> for sharper results` : ""}</span></div>
+        <div class="ccards">${R.top.map((id, k) => clusterCard(id, k + 1, R.cs[k].pct)).join("")}</div>
+        ${others.length ? `<div class="stack"><h3>Also worth a look</h3><div class="others">${others.map((o) => `<div class="other" style="--h:${CL[o.id].hue}"><b>${esc(CL[o.id].name)}</b><span class="muted small">${o.pct}% match · ${esc(CL[o.id].careers.slice(0, 2).map((x) => x[0]).join(", "))}</span></div>`).join("")}</div></div>` : ""}
+        <details class="all"><summary>See all 14 clusters</summary><div class="bars" style="margin-top:12px">${R.cs.map((c, k) => `<div class="bar ${k < 3 ? "top" : "dim"}"><span class="lbl">${esc(CL[c.id].name)}</span><span class="trk">${pct(c.pct)}</span><span class="val">${c.pct}%</span></div>`).join("")}</div></details>
+      </div>
+      <div class="panel stack">
+        <div class="panel-head" style="margin:0"><h2>Your interest style</h2><span class="eyebrow">Inspired by Holland's six types</span></div>
+        <p>You lean most toward <b>${esc(ST[styleTop[0]].name)}</b> and <b>${esc(ST[styleTop[1]].name)}</b>. Most people are a mix, and that's a strength.</p>
+        <div class="bars">${R.ss.map((s) => `<div class="bar ${styleTop.includes(s.id) ? "top" : "dim"}"><span class="lbl">${esc(ST[s.id].name)}<small>${esc(ST[s.id].desc)}</small></span><span class="trk">${pct((100 * s.pct) / 100)}</span><span class="val">${s.pct}%</span></div>`).join("")}</div>
+      </div>`;
+    } else {
+      html += R.ia >= Math.ceil(ITEMS.length / 2)
+        ? `<div class="panel empty"><h3>Nothing clicked yet, and that's okay</h3><p class="muted">Every activity got "Not me." Go back and choose "Maybe" for anything you'd be willing to try once.</p><button class="btn btn-primary" type="button" data-go="interests">Review my answers</button></div>`
+        : `<div class="panel empty"><h3>Career clusters need more answers</h3><p class="muted">Answer at least ${Math.ceil(ITEMS.length / 2)} interest questions (you have ${R.ia}).</p><button class="btn btn-primary" type="button" data-go="interests">Keep going</button></div>`;
+    }
+    // Portrait
+    if (R.pReady) {
+      const P = R.ps;
+      html += `<div class="panel stack-lg">
+        <div class="panel-head" style="margin:0"><h2>Your Portrait of a Graduate reflection</h2><span class="muted small">${R.pa} of ${P_ITEMS.length} answered · 1 = Not yet, 4 = Almost always</span></div>
+        ${P.flat ? `<p class="note">Your ratings are close together. That's fine: talk with your counselor about which strengths and growth areas feel most true.</p>` : ""}
+        <div class="bars">${P.list.map((o) => {
+          const cls = P.strengths.includes(o.id) ? "strong" : P.growth.includes(o.id) ? "growth" : "dim";
+          const tag = cls === "strong" ? ` <span class="pill pill-good">Strength</span>` : cls === "growth" ? ` <span class="pill pill-grow">Growth area</span>` : "";
+          return `<div class="bar ${cls}"><span class="lbl">${esc(PG[o.id].name)}${tag}</span><span class="trk">${pct(o.avg === null ? 0 : (100 * o.avg) / 4)}</span><span class="val">${o.avg === null ? "–" : o.avg.toFixed(1)}</span></div>`;
+        }).join("")}</div>
+        <div class="two">
+          <div class="attr-results"><h3>Strengths to build on</h3>${P.strengths.map((id) => `<div class="gcard strong"><b>${esc(PG[id].name)}</b><p class="small">Show it with ${esc(EVIDENCE[id])}.</p><p class="small muted">Take the lead in: ${esc(PG[id].clubs.join(", "))}.</p></div>`).join("") || `<p class="muted">Rate more attributes to see strengths.</p>`}</div>
+          <div class="attr-results"><h3>Growth areas: pick one next step</h3>${P.growth.map((id) => `<div class="gcard growth"><b>${esc(PG[id].name)}</b>
+            <ul class="pick-list">${PG[id].steps.map((st, k) => `<li><label><input type="radio" name="goal" value="${id}:${k}" ${S.plan.goal === `${id}:${k}` ? "checked" : ""} autocomplete="off"><span>${esc(st)}</span></label></li>`).join("")}</ul>
+            ${bridge(id, R.top)}</div>`).join("") || `<p class="muted">Rate more attributes to see growth areas.</p>`}</div>
+        </div>
+        <p class="muted small">Aligned to New York's Portrait of a Graduate as currently published. State guidance is still forthcoming.</p>
+      </div>`;
+    } else {
+      html += `<div class="panel empty"><h3>Portrait reflection needs more answers</h3><p class="muted">Rate at least three of the six attributes.</p><button class="btn btn-primary" type="button" data-go="portrait">Go to the Portrait questions</button></div>`;
+    }
+    // Plan
+    html += planPanel(R);
+    html += recordPanel();
+    el.innerHTML = html;
+  }
+
+  function bridge(attr, top) {
+    const hit = top.find((id) => CL[id].pog.includes(attr));
+    if (hit) return `<p class="bridge">Good news: exploring <b>${esc(CL[hit].name)}</b>, for example through ${esc(CL[hit].clubs[0].charAt(0).toLowerCase() + CL[hit].clubs[0].slice(1))}, also builds ${esc(PG[attr].name)}.</p>`;
+    return `<p class="bridge">Activities that build this: ${esc(PG[attr].clubs.join(", "))}.</p>`;
+  }
+
+  function planPanel(R) {
+    const clusterOpts = R.top;
+    if (S.plan.cluster && !clusterOpts.includes(S.plan.cluster)) { S.plan.cluster = null; S.plan.action = null; }
+    const c = S.plan.cluster ? CL[S.plan.cluster] : null;
+    const actions = c ? [...(S.band === "ms" ? c.msCourses : c.hsCourses), ...c.clubs, ...c.explore] : [];
+    if (S.plan.action !== null && !actions[S.plan.action]) S.plan.action = null;
+    const goal = S.plan.goal ? (() => { const [a, k] = S.plan.goal.split(":"); return `${PG[a].name}: ${PG[a].steps[+k]}`; })() : null;
+    return `<div class="panel stack-lg">
+      <div class="panel-head" style="margin:0"><h2>My next steps</h2><span class="muted small">Choose with your counselor. Nothing here is saved.</span></div>
+      <div class="two">
+        <div class="stack">
+          <label class="eyebrow" for="planCluster">A cluster to explore</label>
+          <select id="planCluster" autocomplete="off" ${clusterOpts.length ? "" : "disabled"}><option value="">Choose one of your top clusters</option>${clusterOpts.map((id) => `<option value="${id}" ${S.plan.cluster === id ? "selected" : ""}>${esc(CL[id].name)}</option>`).join("")}</select>
+          <label class="eyebrow" for="planAction">One thing to try</label>
+          <select id="planAction" autocomplete="off" ${c ? "" : "disabled"}><option value="">${c ? "Choose a course, club or activity" : "Pick a cluster first"}</option>${actions.map((x, k) => `<option value="${k}" ${S.plan.action === k ? "selected" : ""}>${esc(x)}</option>`).join("")}</select>
+        </div>
+        <div class="stack">
+          <label class="eyebrow" for="localNotes">Local options at our school (counselor)</label>
+          <textarea id="localNotes" autocomplete="off" spellcheck="false" placeholder="Course names, BOCES programs, clubs and contacts to look into. Not saved. Don't type student names.">${esc(S.notes)}</textarea>
+        </div>
+      </div>
+      <div class="plan" aria-live="polite">
+        <div><span class="eyebrow">Explore</span><p>${c ? esc(c.name) : `<span class="muted">Not chosen yet</span>`}</p></div>
+        <div><span class="eyebrow">Try</span><p>${c && S.plan.action !== null ? esc(actions[S.plan.action]) : `<span class="muted">Not chosen yet</span>`}</p></div>
+        <div><span class="eyebrow">Grow</span><p>${goal ? esc(goal) : `<span class="muted">Pick a step under Growth areas</span>`}</p></div>
+      </div>
+      <p class="muted small">Want to keep this plan? Write it in your planner or take a photo of this box. The page won't remember it.</p>
+    </div>`;
+  }
+
+  // ---------- counselor guide ----------
+  function names(R) {
+    const t = R.top.map((id) => CL[id].name);
+    return {
+      c1: t[0] || "your top cluster", c2: t[1] || "your second cluster", has: t.length > 0,
+      s1: R.iReady ? ST[R.ss[0].id].name : "your top interest style", s2: R.iReady ? ST[R.ss[1].id].name : "your second style",
+      st: R.pReady && R.ps.strengths[0] ? PG[R.ps.strengths[0]].name : "your strongest attribute",
+      gr: R.pReady && R.ps.growth[0] ? PG[R.ps.growth[0]].name : "your growth attribute"
+    };
+  }
+  function guideGroups(R) {
+    const n = names(R), hs = S.band !== "ms";
+    return [
+      ["Warm up", ["Which result surprised you? Which one felt right?", "What do you enjoy so much that you lose track of time?"]],
+      ["Interests and careers", [`Look at the careers under ${n.c1}. Which one would you want to try for a day? What would you ask someone who does it?`, `Your interest style leans ${n.s1} and ${n.s2}. Where do you already do those things, in school or outside it?`, "Which careers on your list start right after high school, after training or after college? Which path appeals to you?"]],
+      ["Courses", hs ? [`Which course next year could help you test ${n.c1}?`, `Is there a CTE or BOCES program connected to ${n.c1} or ${n.c2}? Would you like to visit it?`, "What would you need to take now to keep every option open, including college?"] : [`Which elective could help you learn more about ${n.c1}?`, "What would you like to try in high school that you can't take yet?", "Which class right now feels most connected to your interests?"]],
+      ["Clubs and activities", ["Which club or activity on your list could you try this semester?", `Is there a way to volunteer, job shadow or talk with someone who works in ${n.c1}?`, "What is one thing you already do outside school that connects to these clusters?"]],
+      ["Portrait of a Graduate", [`You rated ${n.st} as a strength. Tell me about a time you showed it.`, `You picked ${n.gr} as a growth area. What makes it hard right now, and what would help?`, `Could exploring ${n.c1} also help you grow in ${n.gr}?`]],
+      ["Goals and follow-up", ["What is one step you can take in the next two weeks?", "Who at home or at school could you share these results with?", "When should we check in again?"]]
+    ];
+  }
+  function aiPrompt(R) {
+    const n = names(R), band = S.band === "ms" ? "middle school" : "high school";
+    const lines = [
+      `You are helping a school counselor in a New York State public school prepare a career exploration conversation with a ${band} student.`,
+      "Do not ask for or use the student's name or any identifying details. Use only the summary below.",
+      "",
+      "Inventory summary (no identifying information):",
+      `- Top career clusters (Advance CTE National Career Clusters Framework, 2024): ${R.top.length ? R.top.map((id) => CL[id].name).join(", ") : "not yet completed"}`,
+      `- Interest style: ${R.iReady ? `${n.s1} and ${n.s2}` : "not yet completed"}`,
+      `- NY Portrait of a Graduate self-rating: strengths ${R.pReady && R.ps.strengths.length ? R.ps.strengths.map((id) => PG[id].name).join(" and ") : "not yet completed"}; growth areas ${R.pReady && R.ps.growth.length ? R.ps.growth.map((id) => PG[id].name).join(" and ") : "not yet completed"}`,
+      "",
+      "Please give me:",
+      "1. Five open-ended questions to start the conversation, written for this age group.",
+      `2. Course ideas a typical New York ${band} might offer for these clusters, including CTE or BOCES options${S.band === "ms" ? " to look ahead to in high school" : ""}. Mark anything that depends on local offerings.`,
+      "3. Clubs, activities, volunteer or work-based learning ideas that connect to these clusters.",
+      "4. Two small, concrete next steps for each growth area that fit naturally with the student's interests.",
+      "5. A short, encouraging note the student could share with their family, written in plain language.",
+      "",
+      "Keep suggestions realistic and student-friendly. New York's Portrait of a Graduate state guidance is still forthcoming, so treat the attribute alignment as a draft."
+    ];
+    return lines.join("\n");
+  }
+  function viewCounselor() {
+    const R = results(), hasR = R.iReady || R.pReady;
+    const crosswalk = CLUSTERS.map((c) => `<tr><td><b>${esc(c.name)}</b>${c.cross ? " <span class=\"pill pill-plain\">Cross-cutting</span>" : ""}</td><td>${esc(c.former)}</td><td>${c.ny.map((k) => esc(NY_AREAS[k])).join(", ")}</td></tr>`).join("");
+    $("#view-counselor").innerHTML = `
+      <div class="panel stack">
+        <div class="panel-head" style="margin:0"><h2>Conversation guide</h2><span class="muted small">${hasR ? "Questions use this student's results (cluster and attribute names only)." : "Questions fill in with results once the student finishes. Generic wording for now."}</span></div>
+        <p>Use the inventory as a gateway, not a verdict. Start with what felt right to the student, then connect interests to courses, activities and goals.</p>
+        <div class="two">${guideGroups(R).map(([h, qs]) => `<div class="qgroup"><h3>${esc(h)}</h3><ol>${qs.map((q) => `<li>${esc(q)}</li>`).join("")}</ol></div>`).join("")}</div>
+      </div>
+      <div class="panel stack">
+        <div class="panel-head" style="margin:0"><h2>AI planning prompt for the counselor</h2><button class="btn btn-primary" type="button" id="copyPrompt">Copy prompt</button></div>
+        <p class="muted small">Includes only the grade band, cluster names, interest style and attribute names. No name and no individual answers. Use it in your district-approved AI tool.</p>
+        <div class="prompt-box" id="promptText">${esc(aiPrompt(R))}</div>
+      </div>
+      <div class="two">
+        <div class="panel stack">
+          <h2>Running the session</h2>
+          <ol class="steps">
+            <li><div><b>Set it up (2 min).</b> Pick the grade band and remind the student there are no wrong answers and nothing is saved.</div></li>
+            <li><div><b>Interests (8 min).</b> Let the student answer alone. Encourage first reactions.</div></li>
+            <li><div><b>Portrait (5 min).</b> Read the "Think about it" prompt aloud if it helps.</div></li>
+            <li><div><b>Talk (10 to 15 min).</b> Open My results and use the questions above. Note real local options in the counselor box.</div></li>
+            <li><div><b>Plan and clear.</b> Choose one cluster, one thing to try and one growth step. The student writes it down, then press Clear all.</div></li>
+          </ol>
+          <p class="muted small">For a class, project it with Large text on and talk through the 14 clusters together, then have students take it on their own devices.</p>
+        </div>
+        <div class="panel stack">
+          <h2>About the frameworks</h2>
+          <p><b>Career clusters.</b> This page uses Advance CTE's modernized National Career Clusters Framework (2024): 14 clusters, three of them cross-cutting (Digital Technology, Management & Entrepreneurship, Marketing & Sales). Federal Perkins reporting moved to it in 2025-26. Some New York materials still name the older 16 clusters, so the table below maps them.</p>
+          <p><b>Portrait of a Graduate.</b> The six attributes come from NYSED's Portrait of a Graduate (NY Inspires). The page is aligned to the Portrait as currently published; state guidance on how students demonstrate the attributes is still forthcoming.</p>
+          <p><b>Interest questions.</b> Original wording, loosely inspired by Holland's six interest types. It's a conversation starter, not a validated assessment or a prediction.</p>
+          <p><b>Privacy.</b> No name fields, no saving, nothing sent. Reloading the page or pressing Clear all erases everything.</p>
+        </div>
+      </div>
+      <div class="panel stack">
+        <div class="panel-head" style="margin:0"><h2>Cluster crosswalk</h2><span class="eyebrow">Approximate</span></div>
+        <div class="table-wrap"><table><thead><tr><th>2024 cluster</th><th>Older 16-cluster name</th><th>NY CTE content area</th></tr></thead><tbody>${crosswalk}</tbody></table></div>
+        <p class="muted small">The older Science, Technology, Engineering & Mathematics cluster was folded into several new clusters. New York organizes CTE into seven content areas: ${Object.values(NY_AREAS).join(", ")}.</p>
+      </div>`;
+  }
+
+
+  // ---------- counselor PDF record ----------
+  // Outside Claude: save the PDF with an ordinary browser download (nothing leaves the device).
+  const browserSaver = { save: ({ filename, data }) => new Promise((res) => {
+    const url = URL.createObjectURL(new Blob([data], { type: "application/pdf" }));
+    const a = document.createElement("a"); a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000); res();
+  }) };
+  let downloadsNs = null, downloadsChecked = false;
+  try {
+    if (window.claude && typeof window.claude.use === "function") {
+      window.claude.use("downloads").then((d) => { downloadsNs = d; downloadsChecked = true; if (current === "results") rerenderPlan(); }, () => { downloadsChecked = true; });
+    } else { downloadsNs = browserSaver; downloadsChecked = true; }
+  } catch (e) { downloadsNs = browserSaver; downloadsChecked = true; }
+
+  function recordPanel() {
+    if (S.saved) {
+      return `<div class="panel stack saved-box" id="savedBox" role="status">
+        <h2>PDF saved. Ready for the next student?</h2>
+        <p>The file is only wherever you saved it. Clear all now so the next student starts fresh.</p>
+        <div class="row"><button class="btn btn-primary btn-lg" type="button" id="clearAfterSave">Clear all for the next student</button><button class="btn" type="button" id="keepAfterSave">Not yet</button></div>
+      </div>`;
+    }
+    const unavailable = downloadsChecked && !downloadsNs;
+    return `<div class="panel stack">
+      <div class="panel-head" style="margin:0"><h2>Counselor record (PDF)</h2><span class="eyebrow">Made on this device</span></div>
+      <p>Download a PDF of these results to file in your own records folder. The PDF is built right here in the browser and is never sent anywhere.</p>
+      <div class="two">
+        <div class="stack">
+          <label class="eyebrow" for="studentLabel">Student label (optional)</label>
+          <input id="studentLabel" type="text" maxlength="24" autocomplete="off" spellcheck="false" value="${esc(S.label)}" placeholder="Initials or local ID">
+          <p class="muted small">Used only for the PDF's header and file name. It is not saved, not added to the AI prompt, and is erased by Clear all or a reload.</p>
+        </div>
+        <div class="stack">
+          <p class="note">Once saved, the PDF is a student record that lives only where you put it. File it under your district's student records and privacy rules.</p>
+          <div class="row"><button class="btn btn-primary btn-lg" type="button" id="savePdf" ${unavailable ? "disabled" : ""}>Download PDF</button></div>
+          ${unavailable ? `<p class="muted small">Downloads aren't available in this browser.</p>` : ""}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // Helvetica in jsPDF covers Latin-1 plus common punctuation; swap anything else for a plain stand-in.
+  function pdfSafe(t) {
+    return String(t).replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/[–—]/g, "-").replace(/…/g, "...").replace(/[^\x09\x0A\x0D\x20-\x7E -ÿ]/g, "?");
+  }
+  function fileLabel(t) { return String(t).trim().replace(/[^A-Za-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 24); }
+  function today() { const d = new Date(); return { iso: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`, long: d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) }; }
+
+  function buildPdf() {
+    const R = results(), J = window.jspdf && window.jspdf.jsPDF;
+    if (!J) throw { code: "nolib" };
+    const doc = new J({ unit: "pt", format: "letter" });
+    const W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight(), M = 48, CW = W - 2 * M;
+    const TEAL = [11, 107, 103], INK = [19, 36, 38], MUTED = [83, 102, 104];
+    let y = 0;
+    const date = today(), label = S.label.trim();
+    function footer() {
+      doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(...MUTED);
+      doc.text(pdfSafe("Student Pathways Explorer. Built on the counselor's device; nothing was stored or sent by the tool. File under district student records rules."), M, H - 24, { maxWidth: CW });
+    }
+    function need(h) { if (y + h > H - 48) { footer(); doc.addPage(); y = M; } }
+    function text(t, o = {}) {
+      const size = o.size || 10.5, lh = size * 1.35;
+      doc.setFont("helvetica", o.bold ? "bold" : o.italic ? "oblique" : "normal"); doc.setFontSize(size); doc.setTextColor(...(o.color || INK));
+      const x = M + (o.indent || 0), lines = doc.splitTextToSize(pdfSafe(t), CW - (o.indent || 0));
+      lines.forEach((ln) => { need(lh); doc.text(ln, x, y + size); y += lh; });
+      y += o.after === undefined ? 2 : o.after;
+    }
+    function heading(t) { need(40); y += 8; doc.setDrawColor(...TEAL); doc.setLineWidth(1.2); doc.line(M, y, M + CW, y); y += 6; text(t, { size: 14, bold: true, color: TEAL, after: 4 }); }
+    function bullets(arr, indent = 10) { arr.forEach((b) => text(`- ${b}`, { indent, after: 0 })); y += 4; }
+
+    // Header band
+    doc.setFillColor(...TEAL); doc.rect(0, 0, W, 78, "F");
+    doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold"); doc.setFontSize(20);
+    doc.text("Student Pathways Explorer", M, 38);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(10.5);
+    doc.text(pdfSafe(`Results summary  |  ${date.long}  |  ${S.band === "ms" ? "Middle school" : "High school"}${label ? `  |  Student: ${label}` : ""}`), M, 60);
+    y = 100;
+    if (S.sample) text("SAMPLE: made-up answers for demonstration, not a real student.", { bold: true, color: [178, 59, 49], after: 6 });
+
+    heading("Top career clusters");
+    if (R.iReady) {
+      text(`${R.ia} of ${ITEMS.length} interest questions answered. Interest style: ${ST[R.ss[0].id].name} and ${ST[R.ss[1].id].name}. Clusters follow Advance CTE's National Career Clusters Framework (2024).`, { color: MUTED, size: 9.5, after: 6 });
+      R.top.forEach((id, k) => {
+        const c = CL[id], courses = S.band === "ms" ? c.msCourses : c.hsCourses;
+        need(80);
+        text(`${k + 1}. ${c.name} (${R.cs[k].pct}% match)`, { size: 12, bold: true, after: 1 });
+        text(c.blurb, { color: MUTED, after: 3 });
+        text("Sample careers (typical path):", { bold: true, size: 10, after: 0 });
+        bullets(c.careers.map(([n, e]) => `${n} (${EDU[e]})`));
+        text(S.band === "ms" ? "Classes to try:" : "Courses to consider:", { bold: true, size: 10, after: 0 });
+        bullets(courses);
+        text("Clubs and activities:", { bold: true, size: 10, after: 0 });
+        bullets(c.clubs);
+        text(`NY CTE area: ${c.ny.map((x) => NY_AREAS[x]).join(", ")}`, { size: 9.5, color: MUTED, after: 8 });
+      });
+    } else text("Not enough interest answers for cluster results.", { color: MUTED });
+
+    heading("Portrait of a Graduate reflection");
+    if (R.pReady) {
+      text("Self-rating, 1 = Not yet to 4 = Almost always. Aligned to NYSED's Portrait of a Graduate as currently published; state guidance is still forthcoming.", { color: MUTED, size: 9.5, after: 4 });
+      R.ps.list.forEach((o) => {
+        const tag = R.ps.strengths.includes(o.id) ? "  (strength)" : R.ps.growth.includes(o.id) ? "  (growth area)" : "";
+        text(`${PG[o.id].name}: ${o.avg === null ? "not rated" : o.avg.toFixed(1)}${tag}`, { indent: 10, after: 0, bold: !!tag });
+      });
+      y += 6;
+      if (R.ps.strengths.length) text(`Strengths: ${R.ps.strengths.map((id) => PG[id].name).join(", ")}`);
+      if (R.ps.growth.length) text(`Growth areas: ${R.ps.growth.map((id) => PG[id].name).join(", ")}`);
+    } else text("Not enough Portrait answers for results.", { color: MUTED });
+
+    heading("Next steps");
+    const pc = S.plan.cluster ? CL[S.plan.cluster] : null;
+    const acts = pc ? [...(S.band === "ms" ? pc.msCourses : pc.hsCourses), ...pc.clubs, ...pc.explore] : [];
+    const goal = S.plan.goal ? (() => { const [a, k] = S.plan.goal.split(":"); return `${PG[a].name}: ${PG[a].steps[+k]}`; })() : "Not chosen";
+    text(`Cluster to explore: ${pc ? pc.name : "Not chosen"}`);
+    text(`One thing to try: ${pc && S.plan.action !== null ? acts[S.plan.action] : "Not chosen"}`);
+    text(`Growth step: ${goal}`);
+
+    heading("Counselor notes");
+    text(S.notes.trim() || "None", { color: S.notes.trim() ? INK : MUTED });
+
+    footer();
+    return { data: doc.output("arraybuffer"), filename: `Pathways-${fileLabel(label) ? fileLabel(label) + "-" : ""}${date.iso}.pdf` };
+  }
+
+  async function savePdf(btn) {
+    if (!downloadsNs) { toast("Downloads aren't available in this view"); return; }
+    let out;
+    try { out = buildPdf(); } catch (e) { toast(e && e.code === "nolib" ? "The PDF tool didn't load. Reload the page and try again." : "Couldn't build the PDF"); return; }
+    btn.disabled = true; btn.textContent = "Waiting for you to confirm...";
+    try {
+      await downloadsNs.save({ filename: out.filename, data: out.data });
+      S.saved = true; rerenderPlan();
+      const box = $("#savedBox"); if (box) { box.scrollIntoView({ block: "center" }); const b = $("#clearAfterSave"); if (b) b.focus({ preventScroll: true }); }
+    } catch (e) {
+      const code = e && e.code;
+      btn.disabled = false; btn.textContent = "Download PDF";
+      if (code === "declined") toast("Download canceled");
+      else if (code === "rate_limited") toast("A save prompt is already open. Try again in a moment.");
+      else { toast("Downloads aren't available in this view"); downloadsNs = null; rerenderPlan(); }
+    }
+  }
+
+  // ---------- routing ----------
+  const VIEWS = ["start", "interests", "portrait", "results", "counselor"];
+  const RENDER = { start: viewStart, interests: viewInterests, portrait: viewPortrait, results: viewResults, counselor: viewCounselor };
+  let current = "start";
+  function show(v, scroll) {
+    if (!VIEWS.includes(v)) v = "start";
+    current = v;
+    VIEWS.forEach((x) => { $(`#view-${x}`).hidden = x !== v; });
+    document.querySelectorAll(".tab").forEach((t) => t.setAttribute("aria-current", t.dataset.view === v ? "page" : "false"));
+    RENDER[v]();
+    counts();
+    if (scroll !== false) window.scrollTo(0, 0);
+  }
+  function go(v) {
+    if (location.hash === `#${v}`) show(v); else location.hash = v;
+  }
+  window.addEventListener("hashchange", () => show(location.hash.slice(1)));
+
+  // ---------- events ----------
+  document.addEventListener("change", (e) => {
+    const t = e.target;
+    if (t.name === "band") { S.band = t.value; return; }
+    if (t.name && t.name.startsWith("i-")) {
+      const i = +t.name.slice(2); S.interests[i] = +t.value;
+      t.closest(".q").classList.add("answered");
+      const d = answered(S.interests);
+      $("#i-done").textContent = `${d} of ${ITEMS.length} answered`; $("#i-bar").style.width = `${(100 * d) / ITEMS.length}%`;
+      counts(); return;
+    }
+    if (t.name && t.name.startsWith("p-")) {
+      const i = +t.name.slice(2); S.portrait[i] = +t.value;
+      t.closest(".q").classList.add("answered"); counts(); return;
+    }
+    if (t.name === "goal") { S.plan.goal = t.value; rerenderPlan(); return; }
+    if (t.id === "planCluster") { S.plan.cluster = t.value || null; S.plan.action = null; rerenderPlan(); return; }
+    if (t.id === "planAction") { S.plan.action = t.value === "" ? null : +t.value; rerenderPlan(); return; }
+  });
+  document.addEventListener("input", (e) => { if (e.target.id === "localNotes") S.notes = e.target.value; if (e.target.id === "studentLabel") S.label = e.target.value; });
+  function rerenderPlan() {
+    const y = window.scrollY, focusId = document.activeElement && document.activeElement.id;
+    viewResults();
+    if (focusId && document.getElementById(focusId)) document.getElementById(focusId).focus({ preventScroll: true });
+    window.scrollTo(0, y);
+  }
+
+  let resetArmed = null;
+  function clearAll() {
+    S = fresh();
+    go("start");
+    toast("Everything cleared");
+  }
+  document.addEventListener("click", (e) => {
+    const g = e.target.closest("[data-go]");
+    if (g) { e.preventDefault(); go(g.dataset.go); return; }
+    const id = e.target.closest("button") && e.target.closest("button").id;
+    if (!id) return;
+    if (id === "iPrev") { if (S.iPage > 0) { S.iPage--; show("interests"); } }
+    else if (id === "iNext") { if (S.iPage < I_PAGES - 1) { S.iPage++; show("interests"); } else { S.pPage = 0; go("portrait"); } }
+    else if (id === "pPrev") { if (S.pPage > 0) { S.pPage--; show("portrait"); } else { S.iPage = I_PAGES - 1; go("interests"); } }
+    else if (id === "pNext") { if (S.pPage < POG.length - 1) { S.pPage++; show("portrait"); } else go("results"); }
+    else if (id === "loadSample" || id === "loadSample2") {
+      S = fresh(); S.band = SAMPLE.band; S.interests = SAMPLE.interests.slice(); S.portrait = SAMPLE.portrait.slice(); S.sample = true;
+      go("results");
+    }
+    else if (id === "clearSample") clearAll();
+    else if (id === "savePdf") savePdf(e.target.closest("button"));
+    else if (id === "clearAfterSave") clearAll();
+    else if (id === "keepAfterSave") { S.saved = false; rerenderPlan(); }
+    else if (id === "resetTop") {
+      const b = e.target.closest("button");
+      if (resetArmed) { clearTimeout(resetArmed); resetArmed = null; b.textContent = "Clear all"; clearAll(); }
+      else { b.textContent = "Tap again to clear"; resetArmed = setTimeout(() => { resetArmed = null; b.textContent = "Clear all"; }, 4000); }
+    }
+    else if (id === "bigText") { const on = document.documentElement.classList.toggle("big"); e.target.closest("button").setAttribute("aria-pressed", String(on)); }
+    else if (id === "copyPrompt") copy($("#promptText").textContent);
+    else if (id === "sheetClose") $("#sheet").hidden = true;
+  });
+
+  show(location.hash.slice(1) || "start", false);
+})();
+</script>
+
+</html>

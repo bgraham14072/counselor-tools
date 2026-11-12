@@ -1,0 +1,1839 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Distinguished Counselor Studio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: sticky tab bar over a single centered column; each view is a stack of panels. Levels 0-3 carry their own semantic colors. */
+:root {
+  --bg: #eef3f3;
+  --surface: #ffffff;
+  --surface-2: #f6f9f9;
+  --ink: #132426;
+  --muted: #536668;
+  --line: #d4dfe0;
+  --accent: #0b6b67;
+  --accent-ink: #ffffff;
+  --accent-soft: #dbeeec;
+  --mark: #fff1c2;
+  --mark-ink: #5b4300;
+  --l0: #b23b31; --l0-soft: #f8e1de;
+  --l1: #b26b00; --l1-soft: #fbecd2;
+  --l2: #2b65a3; --l2-soft: #dfeaf7;
+  --l3: #23794a; --l3-soft: #dcf0e3;
+  --none: #c6d2d3;
+  --shadow: 0 1px 2px rgba(19,36,38,.06), 0 4px 16px rgba(19,36,38,.05);
+  --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Source Sans 3", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1819; --surface: #142224; --surface-2: #192a2c; --ink: #e3eced; --muted: #9db0b2; --line: #284043;
+    --accent: #52c3b9; --accent-ink: #062120; --accent-soft: #163a38; --mark: #4a3d12; --mark-ink: #ffe7a3;
+    --l0: #f08377; --l0-soft: #3d1f1c; --l1: #f0b04f; --l1-soft: #3b2b10; --l2: #7fb2ea; --l2-soft: #172d45; --l3: #6bcf95; --l3-soft: #163524;
+    --none: #34494c; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.25); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1819; --surface: #142224; --surface-2: #192a2c; --ink: #e3eced; --muted: #9db0b2; --line: #284043;
+  --accent: #52c3b9; --accent-ink: #062120; --accent-soft: #163a38; --mark: #4a3d12; --mark-ink: #ffe7a3;
+  --l0: #f08377; --l0-soft: #3d1f1c; --l1: #f0b04f; --l1-soft: #3b2b10; --l2: #7fb2ea; --l2-soft: #172d45; --l3: #6bcf95; --l3-soft: #163524;
+  --none: #34494c; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.25); color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.5; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+h1, h2, h3 { font-family: var(--f-display); line-height: 1.15; text-wrap: balance; margin: 0; }
+h2 { font-size: 1.45rem; font-weight: 700; }
+h3 { font-size: 1.08rem; font-weight: 700; }
+p { margin: 0; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.eyebrow { font-family: var(--f-mono); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.muted { color: var(--muted); }
+.code { font-family: var(--f-mono); font-size: .78rem; letter-spacing: .02em; }
+
+/* Top bar */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); }
+.top .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; padding-block: 10px 0; }
+.brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.brand-mark { width: 30px; height: 30px; flex: none; }
+.brand h1 { font-size: 1.12rem; font-weight: 700; }
+.brand small { display: block; font-size: .78rem; color: var(--muted); font-family: var(--f-body); font-weight: 400; }
+.tabs { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; width: 100%; margin-left: -4px; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab { flex: none; border: 0; background: none; padding: 10px 12px 12px; font-weight: 600; color: var(--muted); border-bottom: 3px solid transparent; text-decoration: none; font-size: .95rem; }
+.tab[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent); }
+.tab:hover { color: var(--ink); }
+@media (min-width: 820px) { .tabs { width: auto; margin-left: auto; } }
+
+main { padding-block: 22px 64px; }
+.view { display: grid; gap: 18px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; box-shadow: var(--shadow); min-width: 0; }
+.panel-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 16px; margin-bottom: 14px; }
+
+.btn { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--surface); padding: 8px 14px; border-radius: 999px; font-weight: 600; font-size: .92rem; }
+.btn:hover { border-color: var(--accent); }
+.btn-primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn-primary:hover { filter: brightness(1.08); }
+.btn-ghost { border-color: transparent; background: transparent; color: var(--accent); padding-inline: 6px; }
+.btn svg { width: 16px; height: 16px; }
+
+.banner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; background: var(--mark); color: var(--mark-ink); border-radius: 12px; padding: 12px 16px; font-size: .95rem; }
+.banner .btn { background: transparent; border-color: currentColor; color: inherit; }
+
+/* Overview */
+.hero { display: grid; gap: 18px; grid-template-columns: 1fr; }
+@media (min-width: 820px) { .hero { grid-template-columns: 1.1fr 1fr; } }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+.stat { background: var(--surface-2); border-radius: 10px; padding: 10px 12px; }
+.stat b { display: block; font-family: var(--f-display); font-size: 1.7rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.stat span { font-size: .82rem; color: var(--muted); }
+.dist { display: flex; height: 14px; border-radius: 999px; overflow: hidden; background: var(--none); margin-top: 16px; }
+.dist i { display: block; height: 100%; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 8px; font-size: .82rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; flex: none; }
+.bg-0 { background: var(--l0); } .bg-1 { background: var(--l1); } .bg-2 { background: var(--l2); } .bg-3 { background: var(--l3); } .bg-n { background: var(--none); }
+
+.area-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; padding-block: 10px; border-top: 1px solid var(--line); }
+.area-row:first-of-type { border-top: 0; padding-top: 0; }
+.area-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.area-top b { font-weight: 600; }
+.area-top .avg { font-family: var(--f-mono); font-size: .82rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tiles { display: flex; flex-wrap: wrap; gap: 5px; }
+.tile { width: 46px; height: 34px; border-radius: 7px; border: 0; font-family: var(--f-mono); font-size: .72rem; font-weight: 500; color: var(--surface); display: grid; place-items: center; }
+.tile.bg-n { color: var(--muted); }
+.tile:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
+
+.moves { display: grid; gap: 12px; grid-template-columns: 1fr; }
+@media (min-width: 720px) { .moves { grid-template-columns: repeat(3, 1fr); } }
+.move { border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 8px; align-content: start; background: var(--surface-2); min-width: 0; }
+.move .next { font-size: .93rem; }
+.move .actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+
+.pill { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 2px 10px; font-size: .8rem; font-weight: 600; white-space: nowrap; }
+.pill-0 { background: var(--l0-soft); color: var(--l0); } .pill-1 { background: var(--l1-soft); color: var(--l1); }
+.pill-2 { background: var(--l2-soft); color: var(--l2); } .pill-3 { background: var(--l3-soft); color: var(--l3); }
+.pill-n { background: var(--surface-2); color: var(--muted); border: 1px dashed var(--line); }
+
+.planbox { white-space: pre-wrap; background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; font-size: .88rem; max-height: 220px; overflow: auto; }
+
+/* Appraisal */
+.area-nav { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 12px; font-size: .88rem; font-weight: 600; }
+.chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.area-block { display: grid; gap: 10px; scroll-margin-top: 120px; }
+.area-block > header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 12px; padding-top: 10px; }
+.std { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; scroll-margin-top: 120px; }
+.std[data-r="0"] { border-left: 5px solid var(--l0); } .std[data-r="1"] { border-left: 5px solid var(--l1); }
+.std[data-r="2"] { border-left: 5px solid var(--l2); } .std[data-r="3"] { border-left: 5px solid var(--l3); }
+.std-head { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; padding: 14px 16px; }
+@media (min-width: 720px) { .std-head { grid-template-columns: minmax(0, 1fr) auto; align-items: center; } }
+.std-title { display: flex; gap: 10px; align-items: flex-start; background: none; border: 0; padding: 0; text-align: left; }
+.std-title .code { flex: none; padding-top: 3px; color: var(--accent); min-width: 34px; }
+.std-title .txt { min-width: 0; }
+.std-title .txt b { display: block; font-weight: 600; }
+.std-title .txt span { display: block; font-size: .9rem; color: var(--muted); }
+.chev { flex: none; width: 18px; height: 18px; margin-top: 4px; color: var(--muted); transition: transform .2s; }
+.std.open .chev { transform: rotate(90deg); }
+.rate { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; background: var(--surface); width: 40px; height: 36px; font-family: var(--f-mono); font-weight: 500; border-left: 1px solid var(--line); }
+.seg button:first-child { border-left: 0; }
+.seg button[aria-pressed="true"][data-v="0"] { background: var(--l0); color: var(--surface); }
+.seg button[aria-pressed="true"][data-v="1"] { background: var(--l1); color: var(--surface); }
+.seg button[aria-pressed="true"][data-v="2"] { background: var(--l2); color: var(--surface); }
+.seg button[aria-pressed="true"][data-v="3"] { background: var(--l3); color: var(--surface); }
+.rate .lvl { font-size: .85rem; font-weight: 600; min-width: 96px; }
+.std-body { border-top: 1px solid var(--line); padding: 16px; display: grid; gap: 18px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 900px) { .std-body { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); } }
+.checks { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
+.checks label { display: flex; gap: 10px; align-items: flex-start; font-size: .93rem; cursor: pointer; padding: 4px 6px; border-radius: 8px; }
+.checks label:hover { background: var(--surface-2); }
+.checks input { width: 18px; height: 18px; margin: 2px 0 0; flex: none; accent-color: var(--accent); }
+.checks .lt { font-family: var(--f-mono); font-size: .78rem; color: var(--muted); flex: none; width: 14px; padding-top: 2px; }
+.meter { height: 6px; border-radius: 999px; background: var(--surface-2); overflow: hidden; margin-top: 6px; }
+.meter i { display: block; height: 100%; background: var(--accent); }
+.path { background: var(--accent-soft); border-radius: 12px; padding: 14px; display: grid; gap: 10px; align-content: start; }
+.path ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: .92rem; }
+.path h4 { margin: 0; font-size: .82rem; font-family: var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--accent); font-weight: 500; }
+textarea, input[type="text"], input[type="search"], select { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; width: 100%; }
+textarea { min-height: 76px; resize: vertical; font-size: .93rem; }
+.fieldlabel { font-size: .82rem; font-weight: 600; color: var(--muted); display: block; margin-bottom: 4px; }
+
+/* Prompts */
+.notice { display: flex; gap: 12px; align-items: flex-start; border: 1px solid var(--l1); background: var(--l1-soft); border-radius: 12px; padding: 12px 14px; font-size: .93rem; }
+.notice svg { width: 20px; height: 20px; flex: none; color: var(--l1); margin-top: 2px; }
+.filters { display: grid; gap: 12px; grid-template-columns: 1fr; }
+@media (min-width: 760px) { .filters { grid-template-columns: 1.3fr 1fr 1fr; } }
+.typechips { display: flex; flex-wrap: wrap; gap: 6px; }
+.typechips .chip { font-size: .82rem; padding: 5px 10px; }
+.filterbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.toggle { display: inline-flex; align-items: center; gap: 8px; font-size: .9rem; font-weight: 600; }
+.toggle input { width: 18px; height: 18px; accent-color: var(--accent); }
+details.ctx { border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); }
+details.ctx summary { cursor: pointer; padding: 10px 14px; font-weight: 600; font-size: .93rem; }
+.ctx-grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); padding: 0 14px 14px; }
+.module { display: grid; gap: 10px; }
+.module > header { display: grid; gap: 4px; padding-top: 8px; }
+.module > header .row { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; }
+.cards { display: grid; gap: 12px; grid-template-columns: 1fr; }
+@media (min-width: 860px) { .cards { grid-template-columns: 1fr 1fr; } }
+.pcard { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.pcard-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.tag { font-size: .74rem; border-radius: 6px; padding: 2px 7px; background: var(--surface-2); color: var(--muted); border: 1px solid var(--line); }
+.tag.std-tag { font-family: var(--f-mono); cursor: pointer; }
+.tag.std-tag:hover { border-color: var(--accent); color: var(--accent); }
+.tag.t-type { background: var(--accent-soft); color: var(--accent); border-color: transparent; font-weight: 600; }
+.ptext { white-space: pre-wrap; font-size: .88rem; line-height: 1.5; background: var(--surface-2); border-radius: 10px; padding: 10px 12px; max-height: 9.5em; overflow: hidden; position: relative; overflow-wrap: anywhere; }
+.ptext.full { max-height: none; }
+.ptext:not(.full)::after { content: ""; position: absolute; inset: auto 0 0; height: 2.5em; background: linear-gradient(transparent, var(--surface-2)); }
+mark.ph { background: var(--mark); color: var(--mark-ink); border-radius: 4px; padding: 0 2px; }
+.nb { font-size: .85rem; border-left: 3px solid var(--l2); padding: 4px 0 4px 10px; color: var(--muted); }
+.nb b { color: var(--l2); }
+.pcard-foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; }
+.tag.pog { background: var(--l2-soft); color: var(--l2); border-color: transparent; }
+.pog-lbl { font-family: var(--f-mono); font-size: .7rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); align-self: center; margin-right: 2px; }
+.pill-ny { background: var(--l2-soft); color: var(--l2); }
+.pog-grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.pog-card { border: 1px solid var(--line); border-radius: 12px; padding: 14px; background: var(--surface-2); display: grid; gap: 8px; align-content: start; }
+.pog-card .btn { justify-self: start; }
+.cw-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+.cw { border-collapse: collapse; width: 100%; min-width: 620px; font-size: .88rem; }
+.cw th, .cw td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: center; }
+.cw thead th { font-size: .78rem; color: var(--muted); font-weight: 600; background: var(--surface-2); position: sticky; top: 0; }
+.cw tbody th { text-align: left; font-weight: 400; }
+.cw tr.grp th { text-align: left; font-family: var(--f-mono); font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); background: var(--surface-2); }
+.cw-std { background: none; border: 0; padding: 0; text-align: left; }
+.cw-std:hover { color: var(--accent); }
+.cw-std .code { color: var(--accent); margin-right: 6px; }
+.cw-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: var(--l2); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.priv { font-size: .8rem; color: var(--muted); padding-left: 10px; border-left: 3px solid var(--l1); }
+.empty { text-align: center; padding: 30px 16px; color: var(--muted); }
+
+/* Guide */
+.tools { display: grid; gap: 12px; grid-template-columns: 1fr; }
+@media (min-width: 760px) { .tools { grid-template-columns: 1fr 1fr; } }
+.tool { border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 6px; background: var(--surface-2); }
+.prose { max-width: 68ch; display: grid; gap: 10px; }
+.prose ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.scale { display: grid; gap: 8px; }
+.scale div { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 10px; align-items: start; font-size: .93rem; }
+@media (max-width: 480px) { .scale div { grid-template-columns: 1fr; gap: 2px; } }
+
+.toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 20px); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-weight: 600; font-size: .9rem; opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; z-index: 20; }
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.sheet { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: grid; place-items: center; z-index: 30; padding: 16px; }
+.sheet > div { background: var(--surface); border-radius: 14px; padding: 16px; width: min(640px, 100%); display: grid; gap: 10px; }
+.sheet textarea { min-height: 260px; font-size: .85rem; }
+footer.foot { font-size: .82rem; color: var(--muted); padding-block: 0 40px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="var(--accent)"/><path d="M8 22 L13 16 L17 19 L24 9" fill="none" stroke="var(--accent-ink)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24" cy="9" r="2.6" fill="var(--accent-ink)"/></svg>
+      <h1>Distinguished Counselor Studio<small>Built on the ASCA School Counselor Performance Appraisal</small></h1>
+    </div>
+    <nav class="tabs" aria-label="Sections">
+      <a class="tab" href="#overview" data-view="overview">Overview</a>
+      <a class="tab" href="#appraisal" data-view="appraisal">Self-appraisal</a>
+      <a class="tab" href="#prompts" data-view="prompts">Prompt library</a>
+      <a class="tab" href="#portrait" data-view="portrait">NY Portrait</a>
+      <a class="tab" href="#guide" data-view="guide">How to use</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="exampleBanner" class="banner" hidden>
+    <span><b>You're looking at example ratings</b> so you can see how the dashboard works. Clear them to start your own self-appraisal.</span>
+    <button class="btn" id="clearExample" type="button">Start my own appraisal</button>
+  </div>
+
+  <section class="view" id="view-overview" aria-labelledby="ov-h"></section>
+  <section class="view" id="view-appraisal" hidden></section>
+  <section class="view" id="view-prompts" hidden></section>
+  <section class="view" id="view-portrait" hidden></section>
+  <section class="view" id="view-guide" hidden></section>
+</main>
+<footer class="foot wrap">Standards, demonstration elements and artifacts are taken from the ASCA School Counselor Performance Appraisal. Portrait of a Graduate attributes are from NYSED; the alignment is a draft. Your ratings and notes stay in this browser on this device.</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="sheet" id="sheet" hidden>
+  <div role="dialog" aria-modal="true" aria-labelledby="sheet-h">
+    <h3 id="sheet-h">Copy this prompt</h3>
+    <p class="muted">Your browser blocked automatic copying. The text is selected below: press Ctrl+C (or Cmd+C), or long-press to copy.</p>
+    <textarea id="sheetText" readonly></textarea>
+    <div><button class="btn btn-primary" id="sheetClose" type="button">Done</button></div>
+  </div>
+</div>
+<script>
+const LEVELS = [
+  { n: 0, name: "Unsatisfactory" },
+  { n: 1, name: "Developing" },
+  { n: 2, name: "Proficient" },
+  { n: 3, name: "Distinguished" }
+];
+
+const DOMAINS = [
+  {
+    id: "PB", label: "Professional Beliefs", sub: "Mindsets", items: [
+      { id: "M1", short: "Every student can learn and succeed", text: "Demonstrates belief that each and every student can learn and succeed" },
+      { id: "M2", short: "Access to a high-quality education", text: "Demonstrates belief that each and every student should have access and opportunity to a high-quality education" },
+      { id: "M3", short: "Graduate prepared for postsecondary", text: "Demonstrates belief that each and every student should graduate from high school prepared for postsecondary opportunities" },
+      { id: "M4", short: "Access to the counseling program", text: "Demonstrates belief that each and every student should have access to the school counseling program" },
+      { id: "M5", short: "A collaborative process", text: "Demonstrates belief that effective school counseling programs are a collaborative process involving school counselors and education partners, such as families, staff, administrators, decision-makers, and any other school or community organizations/individuals" },
+      { id: "M6", short: "Counselors are leaders", text: "Demonstrates belief that school counselors are leaders in the school, district, state and nation" },
+      { id: "M7", short: "Programs promote whole-student development", text: "Demonstrates belief that school counseling programs promote and enhance student academic, career and social/emotional development" }
+    ]
+  },
+  {
+    id: "PF", label: "Professional Foundation", sub: "Behaviors", items: [
+      { id: "PF1", short: "Theories", text: "Demonstrates a working knowledge of developmental, learning, counseling and education theories",
+        demo: ["Articulates knowledge of human development and learning theories that affect student success",
+          "Articulates knowledge of established and emerging counseling theories and techniques that are effective in school settings",
+          "Articulates knowledge of career development theories for postsecondary planning",
+          "Uses principles of a multitiered system of supports within a school counseling program"],
+        art: ["Programs, brochures or agendas for professional development sessions in which school counselor provided training related to theories",
+          "School-counselor-prepared information sheets or infographics developed for dissemination among education partners (e.g., developmental milestones for kindergarteners, tips for students to be successful in school, how to choose a career path, age-specific information on how children/adolescents process grief)",
+          "ASCA Student Standards delivery plan and data report",
+          "Achievement gap plan and data report"] },
+      { id: "PF2", short: "Systems, law, policy and research", text: "Demonstrates understanding of educational systems, legal issues, policies, research and educational trends",
+        demo: ["Explains organizational structure/governance of the American educational system and cultural, political and social influences on current educational practices",
+          "Explains educational systems, philosophies and theories and current trends in education, including federal and state legislation",
+          "Explains process for development of policy and procedures at the building, district, state and national levels",
+          "Explains the nature of academic, career and social/emotional counseling in schools and differences from other fields of counseling",
+          "Delineates the roles of student service providers, such as school social worker, school psychologist or school nurse, and ways to collaborate",
+          "Articulates a rationale for a school counseling program",
+          "Uses education research to inform decisions and programming",
+          "Uses current trends in technology to promote student success"],
+        art: ["Evidence of professional advocacy activities at district, state or national level (photographs or recordings of interactions with legislators, minutes from meetings, etc.)",
+          "Presentation slides, handouts or other documents from family and/or teacher workshops regarding the school counselor's role",
+          "Presentation slides, handouts or other documents regarding the alignment of the school counseling program with the school vision and/or mission",
+          "Minutes from school counseling advisory committee meetings",
+          "List of citations from research used to inform decision and program development"] },
+      { id: "PF3", short: "Legal and ethical principles", text: "Applies legal and ethical principles of the school counseling profession",
+        demo: ["Practices in accordance with the ASCA Ethical Standards for School Counselors",
+          "Adheres to school counselor legal responsibilities including the unique legal and ethical principles of working with minor students in a school setting",
+          "Adheres to the ethical and statutory limits of confidentiality",
+          "Fulfills legal and ethical obligations to families, teachers, administrators and other school staff",
+          "Consults with school counselors and other education, counseling and legal professionals when ethical and legal questions arise",
+          "Resolves ethical dilemmas by employing an ethical decision-making model in accordance with the ASCA Ethical Standards for School Counselors",
+          "Models ethical behavior",
+          "Engages in continual professional development to inform and guide ethical and legal work"],
+        art: ["Posting of specific ethical standards in school counseling office (e.g., limits of confidentiality statement or ethical decision-making process)",
+          "Weekly calendars, regarding documentation of critical interactions with students",
+          "Completion certificates of professional development experiences related to law and ethics"] },
+      { id: "PF4", short: "Professional standards and competencies", text: "Applies school counseling professional standards and competencies",
+        demo: ["Stays current with school counseling research and best practices",
+          "Conducts self-appraisal and assessment related to school counseling professional standards and competencies",
+          "Uses personal reflection, consultation and supervision to promote professional growth and development",
+          "Develops a yearly professional development plan to ensure engagement in professional growth opportunities related to relevant professional standards and competencies and personal limitations"],
+        art: ["Membership documentation in state and national school counselor organizations",
+          "Completed ASCA Professional Standards & Competencies self-assessment with written plans for own professional growth",
+          "Identification of specific individuals and their contact information from whom professional consultation and supervision may be sought"] },
+      { id: "PF5", short: "ASCA Student Standards", text: "Uses ASCA Student Standards: Mindsets & Behaviors for Student Success to inform the implementation of the school counseling program",
+        demo: ["Selects ASCA Mindsets & Behaviors for Student Success standards to address student needs demonstrated in data",
+          "Prioritizes ASCA Mindsets & Behaviors for Student Success standards aligned with school improvement goals",
+          "Selects or creates competencies aligned with the ASCA Student Standards and state-specific standards",
+          "Explains how the ASCA Student Standards promote positive mental health development"],
+        art: ["Completed ASCA Student Standards delivery plan", "Completed Achievement gap plan and data report",
+          "Completed small-group session plans and data report", "Completed lesson plans"] },
+      { id: "PF6", short: "Cultural, social and environmental influences", text: "Demonstrates understanding of the impact of cultural, social and environmental influences on student success and opportunities",
+        demo: ["Demonstrates basic knowledge and respect of differences in customs, communications, traditions, values and other traits among students based on race, religion, ethnicity, nationality, sexual orientation, gender identity, physical or intellectual ability and other factors",
+          "Explains how students' cultural, social and economic background may affect their academic achievement, behavior, relationships and overall performance in school",
+          "Maintains and communicates high expectations for each and every student, regardless of cultural, social or economic background",
+          "Explains the dynamics of cross-cultural communications and demonstrates the ability to communicate with persons of other cultures effectively",
+          "Collaborates with administrators, teachers and other staff in the school and district to ensure culturally responsive curricula and student-centered instruction",
+          "Understands personal limitations and biases, and articulates how they may affect the school counselor's work"],
+        art: ["Completion certificates from professional development sessions on cultural, social or environmental influences",
+          "Lesson plans, presentations, handouts from school-counselor-led sessions designed to build culturally sustaining behaviors in others",
+          "Annual professional growth plan"] },
+      { id: "PF7", short: "Leadership", text: "Demonstrates leadership through the development and implementation of the school counseling program",
+        demo: ["Identifies sources of power and authority and formal and informal leadership",
+          "Demonstrates professional and personal qualities and skills of effective leaders",
+          "Applies a model of leadership to the school counseling program",
+          "Creates the organizational structure and components of an effective school counseling program aligned with the ASCA National Model",
+          "Applies the results of a school counseling program assessment to inform the design and implementation of the school counseling program",
+          "Uses leadership skills to facilitate positive change for the school counseling program",
+          "Defines the role of the school counselor and the school counseling program in the school crisis plan",
+          "Serves as a leader in the school and community to promote and support student success",
+          "Participates in the school improvement process to bring the school counseling perspective to the development of school goals"],
+        art: ["Leadership roles in school, district or community committees focused on life-readiness and/or academic success",
+          "Participation in school counseling professional associations", "Completed achievement gap plan and data report",
+          "Annual calendar", "Advisory council agendas and minutes",
+          "ASCA-Certified School Counselor (ACSC) certification", "Recognized ASCA Model Program (RAMP) certification"] },
+      { id: "PF8", short: "Advocacy", text: "Demonstrates advocacy in the school counseling program",
+        demo: ["Models school counselor advocacy competencies to promote school counseling program development and student success",
+          "Advocates responsibly for school board policy and local, state and federal statutory requirements in students' best interests",
+          "Explains the benefits of the school counseling program for students and education partners",
+          "Provides rationale for appropriate activities for school counselors",
+          "Provides rationale for discontinuation of inappropriate activities for school counselors",
+          "Uses data from the school counseling program to promote reduction in student-to-school-counselor ratios and reduction of inappropriate non-school-counseling-related tasks",
+          "Participates in school counseling and education-related professional organizations"],
+        art: ["Presentations or information shared with school board and local, state or federal oversight organizations",
+          "Presentations or information shared with education partners",
+          "Reports showing how school counselor's time could be spent more effectively for student success (complete use-of-time calculator)",
+          "Participation in school counseling professional association advocacy events",
+          "School-counselor-developed infographics based on school counseling data reports and disseminated to education partners"] },
+      { id: "PF9", short: "Systemic change", text: "Creates systemic change through the implementation of the school counseling program",
+        demo: ["Acts to create an environment promoting and supporting student success",
+          "Uses data to identify how school, district and state educational policies, procedures and practices support and/or impede student success",
+          "Uses data to demonstrate a need to address systemic barriers in areas such as course enrollment patterns; access; and achievement, opportunity and/or information gaps",
+          "Develops and implements a plan to address personal and/or institutional resistance to change that better supports student success"],
+        art: ["Reports showing change in student achievement and/or contributing-factors data",
+          "Reports showing change in course enrollment or increased access to opportunities",
+          "Reports showing change in postsecondary success linked to National Student Clearinghouse data"] }
+    ]
+  },
+  {
+    id: "DS", label: "Direct and Indirect Student Services", sub: "Behaviors", items: [
+      { id: "DS1", short: "Instruction", text: "Designs and implements instruction aligned to ASCA Mindsets & Behaviors for Student Success in classroom, large-group, small-group and individual settings",
+        demo: ["Uses student, school and district achievement and contributing-factors data to identify issues to be addressed through instruction",
+          "Identifies appropriate evidence-based curricula aligned to the ASCA Mindsets & Behaviors for Student Success or selects/develops other materials informed by research and best practice if evidence-based materials do not exist",
+          "Assesses cultural and social trends when developing and choosing curricula",
+          "Demonstrates pedagogical skills, including culturally sustaining classroom management strategies, lesson planning and personalized instruction",
+          "Creates lesson plans identifying activities to be delivered, standards to be addressed, to whom activities will be delivered, how they will be delivered and how data will be assessed to determine impact on access to the school counseling program and life-readiness for each and every student",
+          "Uses a variety of technologies in the delivery of lessons and activities",
+          "Engages with school administrators, teachers and other staff to ensure the effective implementation of instruction",
+          "Analyzes data from lessons and activities to determine impact on student access and life-readiness"],
+        art: ["Completed ASCA Student Standards delivery plan and data report", "Achievement gap plan and data report",
+          "Small-group plans and data reports", "Lesson plans and data reports",
+          "Annual calendar (details of specific school counseling events for the year)"] },
+      { id: "DS2", short: "Appraisal and advisement", text: "Provides appraisal and advisement in classroom, large-group, small-group and individual settings",
+        demo: ["Develops strategies to provide appraisal & advisement to students and families about attaining the ASCA Student Standards",
+          "Uses assessments to help students understand their abilities, values and career interests",
+          "Includes career opportunities, labor market trends and global economics to help students develop immediate and long-range plans",
+          "Helps students cross reference individual assessment results (e.g., MBTI, Holland Code, ASVAB, O*Net) with occupational/career goals",
+          "Helps students understand how academic performance relates to the world of work, family life and community service",
+          "Helps students understand the importance of postsecondary education and/or training as a pathway to a career",
+          "Helps students and families understand and explore postsecondary awareness, exploration, admissions and financial aid processes",
+          "Connects students to workplace experiences to deepen understandings and explore career interests"],
+        art: ["Completed graduation plans", "Completed postsecondary plans",
+          "Completed career interest inventories with lesson plans showing appraisal & advisement activities",
+          "Completed strengths inventories with lesson plans showing appraisal & advisement activities",
+          "Completed field trips to community organizations, businesses and postsecondary institutions"] },
+      { id: "DS3", short: "Short-term counseling", text: "Provides short-term counseling in small-group and individual settings",
+        demo: ["Uses data to identify students in need of counseling intervention",
+          "Provides support for students, including individual and small-group counseling, during times of transition, heightened stress, critical change or other situations impeding student success",
+          "Uses the ASCA Student Standards to guide the focus of individual and small-group counseling",
+          "Explains why providing short-term counseling is appropriate for a school counselor and providing long-term therapy is inappropriate",
+          "Explains the impact of adverse childhood experiences and trauma, and demonstrates techniques to support students who have experienced trauma",
+          "Responds with appropriate intervention strategies to meet the needs of the individual, group or school community before, during and after crisis response"],
+        art: ["Achievement gap plan and data report", "Small-group plans and data reports",
+          "Presentations to education partners on trauma-informed practices", "Crisis response “pack” or bag/box",
+          "Participation/membership on district crisis response teams"] },
+      { id: "DS4", short: "Referrals", text: "Makes referrals to appropriate school and community resources",
+        demo: ["Maintains a list of current referral resources, consistent with school and district policies, for students, staff and families to effectively address academic, career and social/emotional issues",
+          "Communicates the limits of school counseling and the continuum of mental health services",
+          "Articulates why diagnoses and long-term therapy are outside the scope of school counseling"],
+        art: ["List of school and community referral sources", "School-counselor-developed school counseling brochure"] },
+      { id: "DS5", short: "Consultation", text: "Consults to support student achievement and success",
+        demo: ["Gathers information on student needs from education partners to inform the selection of strategies for student success",
+          "Shares strategies supporting student achievement with education partners",
+          "Consults with school counselors and other education and counseling professionals when questions of school counseling practice arise",
+          "Facilitates in-service training or workshops for families, administrators, other school staff, teachers or other education partners to share school counseling expertise"],
+        art: ["Presentation materials from school-counselor-led trainings or workshops",
+          "Materials developed for dissemination to education partners (e.g., why school attendance matters, how to help with homework, why mentoring works, etc.)",
+          "Schedule of family programs", "Member of school leadership team, data team, etc."] },
+      { id: "DS6", short: "Collaboration", text: "Collaborates with education partners, such as families, staff, administrators, decision-makers, and any other school or community organizations/individuals, for student achievement and success",
+        demo: ["Partners with others to advocate for student achievement and educational opportunities for each and every student",
+          "Explains the potential for dual roles with families and other caretakers",
+          "Identifies and involves appropriate school and community professionals as well as the family in a crisis situation",
+          "Supervises school counseling interns consistent with the principles of the ASCA School Counselor Professional Standards & Competencies"],
+        art: ["List of groups that partner with the school counseling program",
+          "List of committee involvement in school, district or community focused on student success",
+          "Agenda and minutes from school counselor advisory meetings"] }
+    ]
+  },
+  {
+    id: "PA", label: "Planning and Assessment", sub: "Behaviors", items: [
+      { id: "PA1", short: "Vision and mission alignment", text: "Articulates how the school counseling program aligns with school and district vision and mission statement",
+        demo: ["Analyzes personal, school, district and state beliefs, assumptions and philosophies about student success",
+          "Composes a personal beliefs statement about students, families, teachers, school counseling programs and the educational process consistent with the school's educational philosophy and mission",
+          "Analyzes the school's vision and mission statements",
+          "Articulates to administrators, teachers, school staff and other education partners how the school counseling program aligns with the school and district vision and mission"],
+        art: ["Belief statements aligned with mindsets from ASCA Professional Standards & Competencies",
+          "Statement of how the school counseling program aligns with the school and/or district vision and mission statements"] },
+      { id: "PA2", short: "Achievement gaps", text: "Identifies achievement gaps and factors contributing to those gaps",
+        demo: ["Collects and analyzes data to identify areas of success or achievement gaps between and among different groups of students",
+          "Reviews, disaggregates and interprets student achievement data to inform selection and implementation of strategies and interventions as needed",
+          "Reviews, disaggregates and interprets contributing-factors data to inform selection and implementation of strategies and interventions as needed",
+          "Creates goals based on student, school and/or district data to close achievement gaps"],
+        art: ["Disaggregated data reports highlighting achievement gaps between and among different groups of students",
+          "Disaggregated data reports of contributing-factors data highlighting gaps between and among different groups of students",
+          "Goals addressing achievement gaps", "Completed school counseling data priorities",
+          "Annual achievement gap plan and data report", "Completed achievement gap plan and data report"] },
+      { id: "PA3", short: "Achievement gap plans", text: "Develops achievement gap plan(s) based on student data annually",
+        demo: ["Creates achievement gap plan(s) aligned with school counseling data priorities",
+          "Uses goals from the school improvement plan and other student data to inform and establish school counseling data priorities",
+          "Creates achievement gap plans annually based on school counseling data priorities and student achievement data",
+          "Determines appropriate students for the focus of achievement gap plans based on student, school and district data",
+          "Identifies intended impact on achievement as a result of achievement gap plan implementation",
+          "Writes goals in a measurable format and includes baseline and projected final data within the goal statement",
+          "Identifies contributing-factors data (e.g. attendance, discipline, systemic barriers, etc.) that may inform the selection of strategies to reach the goal",
+          "Identifies student and education partner perspectives to gain insight on possible factors contributing to achievement issues",
+          "Identifies appropriate standards from the ASCA Student Standards: Mindsets & Behaviors for Student Success that address needs identified in achievement gap plans",
+          "Selects evidence-based curricula and activities to accomplish objectives, or selects/develops other materials informed by research and best practice if evidence-based materials do not exist",
+          "Identifies appropriate resources needed to implement plans",
+          "Communicates achievement gap plans to administrators, teachers, school staff and other education partners",
+          "Explains basic research sampling, methodology and analysis concepts as they relate to research outcomes and action research",
+          "Uses student data and feedback from students and education partners to monitor and refine achievement gap plans and strategies"],
+        art: ["Completed school counseling data priorities",
+          "Completed achievement gap plan(s) and data report(s) including baseline and target data including goals, contributing-factors data and appropriate standards from the ASCA Student Standards",
+          "List of data of contributing-factors to achievement used to inform decisions and selection of strategies",
+          "Selected evidence-based curricula and activities to accomplish objectives",
+          "Presentations or handouts shared with education partners about achievement gap plans development and implementation",
+          "Documentation showing what data and feedback from students and education partners was used to monitor and refine achievement gap plans"] },
+      { id: "PA4", short: "Program impact", text: "Assesses and reports program impact to the school community",
+        demo: ["Explains concepts related to assessment of access, life-readiness and achievement data within the school counseling program",
+          "Reviews impact of the achievement gap plan(s)",
+          "Analyzes data to assess school counseling program effectiveness and to inform program development",
+          "Collaborates with members of the school counseling team and with administration to decide how school counseling programs are assessed and how program impact is shared",
+          "Uses data to demonstrate the value the school counseling program adds to improvement in life-readiness skills and student achievement",
+          "Uses presentation skills to share effectiveness data and results of achievement gap plans and activities with education partners"],
+        art: ["Presentation materials with data from school counseling activities", "Completed school counseling data priorities",
+          "Completed achievement gap plan(s) and data report(s)"] },
+      { id: "PA5", short: "Use of time", text: "Uses time appropriately according to national recommendations and student/school data",
+        demo: ["Articulates the distinction between direct and indirect student services",
+          "Assesses use of time in direct and indirect student services and program management and school support to determine how much time is spent in each school counseling program component",
+          "Articulates the best use of a school counselor's time to meet student needs as identified through student data and school counseling data priorities",
+          "Organizes and manages time to effectively implement the school counseling program using skills including scheduling, publicizing and prioritizing time",
+          "Creates annual and weekly calendars to plan activities reflecting school counseling program priorities",
+          "Identifies, evaluates and participates in fair-share responsibilities"],
+        art: ["Use-of-time calculator completed with time percentages in direct and indirect student services (80% or more) and program planning and school support (20% or less)",
+          "Completed annual administrator conference and meeting notes", "Annual and weekly calendars"] },
+      { id: "PA6", short: "Administrator agreement", text: "Establishes agreement about the school counseling program with the administrator in charge of the school counseling program",
+        demo: ["Completes annual administrator conference templates for the school counseling program with other members of the school counseling staff",
+          "Meets with the principal and/or administrator in charge of the school counseling program to formalize the managing, delivery, and assessing the school counseling program",
+          "Explains and models the appropriate role of the school counselor and the organization of the school counseling program",
+          "Explains achievement gap goals, their basis in student data and their alignment with the school improvement plan",
+          "Advocates for the appropriate use of school counselor time based on national recommendations and student needs",
+          "Finalizes the annual administrator conference template after presentation to and discussion with the principal and/or supervising administrator"],
+        art: ["Completed annual administrator conference signed by the administrator in charge of the school counseling program and the school counselor"] },
+      { id: "PA7", short: "Advisory council", text: "Establishes and convenes an advisory council for the school counseling program",
+        demo: ["Determines appropriate education partners for representation on the advisory council",
+          "Develops effective and efficient advisory council meeting agendas to inform council members about the school counseling program",
+          "Explains how the school counseling program aligns with the school and district mission",
+          "Explains and discusses school data, school counseling data priorities, school counseling plans (e.g., achievement gap, ASCA Student Standards delivery plan, lesson plans and small-group plans) and program assessment",
+          "Records advisory council meeting notes, and distributes as appropriate",
+          "Analyzes and incorporates feedback from the advisory council related to school counseling data priorities and plans as appropriate"],
+        art: ["List of representatives on the advisory council with their positions", "Agenda from advisory council meetings",
+          "Minutes from advisory council meetings", "Presentation materials from advisory council meetings (e.g., handouts, infographics, slides, etc.)"] },
+      { id: "PA8", short: "Performance appraisal process", text: "Uses appropriate school counselor performance appraisal process",
+        demo: ["Explains and advocates for appropriate school counselor performance appraisal process based on school counselor standards and implementation of the school counseling program",
+          "Explains how school counseling activities fit within categories of a performance appraisal instrument",
+          "Utilizes components of the ASCA National Model to document data-informed, student-focused activities that demonstrate evidence of meeting standards of performance appraisal instruments"],
+        art: ["Completed performance appraisal aligned with the ASCA Professional Standards & Competencies",
+          "Artifacts demonstrating completion or progress toward completion of components of the ASCA National Model",
+          "ASCA-Certified School Counselor (ACSC) application and score results",
+          "Recognized ASCA Model Program (RAMP) application and score results"] }
+    ]
+  }
+];
+const TYPES = {
+  plan: "Planning",
+  data: "Data analysis",
+  lesson: "Lessons & groups",
+  comm: "Family & partner communication",
+  advo: "Presentations & advocacy",
+  reflect: "Reflection & appraisal evidence",
+  learn: "Professional learning"
+};
+
+const CTX = "Context: I am a [SCHOOL LEVEL] school counselor serving grades [GRADE BAND] with a caseload of about [CASELOAD] students in [STATE].";
+const COACH = "Act as an experienced school counseling coach who knows the ASCA National Model, the ASCA Ethical Standards for School Counselors and the ASCA School Counselor Professional Standards & Competencies.";
+const DEID = "Everything I share is de-identified: no student names, ID numbers or details that could identify a student.";
+
+const MODULES = [
+  {
+    id: "start", title: "Start here: set up your AI coach", std: ["PA8", "PF4"],
+    blurb: "Turn any AI tool into a coach that knows the appraisal. Do this once, then use the other modules inside it.",
+    prompts: [
+      { t: "Custom instructions for a counseling coach", type: "learn", std: ["PA8", "PF4"],
+        text: `Use these as the standing instructions for this workspace.
+
+You are my school counseling performance coach. Ground every answer in the ASCA School Counselor Performance Appraisal I have provided. It rates each standard 0 = Unsatisfactory, 1 = Developing, 2 = Proficient, 3 = Distinguished, and lists for each standard what "Demonstration includes" and what "Artifacts may include."
+
+{ctx}
+
+When I describe my work:
+1. Name the standard(s) and the specific demonstration elements it shows.
+2. Name the artifact(s) that would document it.
+3. Tell me the single next step that would move it toward Distinguished.
+Ask clarifying questions before drafting anything long. Keep answers practical and brief.
+
+Privacy rule: never ask for student names or identifying details. If I include any, stop and remind me to remove them.`,
+        nb: "In NotebookLM, upload the appraisal PDF as a source, then paste this into the chat or the notebook's chat settings. In ChatGPT, Claude or Gemini, put it in a Project, Gem or custom GPT and attach the appraisal there." },
+      { t: "Self-appraisal interview", type: "reflect", std: ["PA8", "PF4"],
+        text: `${COACH}
+{ctx}
+
+Interview me to complete a self-appraisal using the ASCA School Counselor Performance Appraisal. Go one standard at a time, starting with [AREA: Professional Foundation / Direct and Indirect Student Services / Planning and Assessment].
+
+For each standard: ask me two short questions about what I actually do, then suggest a rating from 0 to 3 with one sentence of reasoning, the evidence I already have, and the artifact I am missing. Wait for my answer before moving on. At the end, give me a table of standard, suggested rating, evidence, and next step.` },
+      { t: "Map my artifacts to the appraisal", type: "reflect", std: ["PA8"],
+        text: `Using only the sources in this notebook, build a table with these columns: Standard, Demonstration elements, Which of my uploaded documents show evidence, What is missing.
+
+Cover every standard in the ASCA School Counselor Performance Appraisal. Quote the document title for each piece of evidence. Then list the five gaps that would most improve my appraisal if I closed them this year.`,
+        nb: "Built for NotebookLM. Upload the appraisal PDF plus your own de-identified artifacts (lesson plans, calendars, data reports, agendas) as sources first." }
+    ]
+  },
+  {
+    id: "mindsets", title: "Professional beliefs in action", std: ["M1", "M2", "M3", "M4", "M5", "M6", "M7"],
+    blurb: "The seven mindsets are rated too. These prompts help you show them, not just hold them.",
+    prompts: [
+      { t: "Write my professional beliefs statement", type: "reflect", std: ["M1", "M2", "M3", "M4", "M5", "M6", "M7", "PA1"],
+        text: `${COACH}
+{ctx}
+
+Help me write a one-page professional beliefs statement that reflects the seven ASCA mindsets: each and every student can learn and succeed; should have access to a high-quality education; should graduate prepared for postsecondary opportunities; should have access to the school counseling program; programs are a collaborative process with education partners; school counselors are leaders; and programs promote academic, career and social/emotional development.
+
+Here is what I believe in my own words: [YOUR NOTES]
+Here is our school mission: [PASTE MISSION]
+
+Keep my voice. Connect each belief to one concrete practice I can point to. End with three sentences I could say aloud at a staff meeting.` },
+      { t: "Mindsets audit of my calendar", type: "reflect", std: ["M1", "M2", "M3", "M4", "M5", "M6", "M7"],
+        text: `${COACH}
+${DEID}
+
+Here is a list of what I did over the last two weeks: [PASTE ACTIVITY LIST]
+
+Map each activity to the seven ASCA mindsets. Show which mindsets are strongly visible in my work, which are barely visible, and suggest one activity for next month that would make the weakest mindset visible to students, families and staff.` },
+      { t: "Equity check on a program decision", type: "plan", std: ["M1", "M2", "M4"],
+        text: `${COACH}
+{ctx}
+
+I am deciding: [DESCRIBE THE DECISION, e.g., how students sign up for college visits].
+
+Look at it through the lens that each and every student should have access to the school counseling program and to a high-quality education. Which groups of students might be left out, and why? Suggest two changes that widen access, and the data I should collect to see if access actually improved.` },
+      { t: "Counselor-as-leader pitch", type: "advo", std: ["M6", "M7"],
+        text: `${COACH}
+{ctx}
+
+Write a 60-second talk I can give to [AUDIENCE: staff / PTA / board / new teachers] that shows how the school counseling program promotes academic, career and social/emotional development and why school counselors are leaders in the school. Use one real example from my work: [EXAMPLE]. Plain language, no jargon, end with one clear ask.` }
+    ]
+  },
+  {
+    id: "pf1", title: "Theories into practice", std: ["PF1"],
+    blurb: "Show working knowledge of developmental, learning, counseling and career theories, and MTSS.",
+    prompts: [
+      { t: "Theory-to-practice brief", type: "learn", std: ["PF1"],
+        text: `${COACH}
+{ctx}
+
+Explain [THEORY, e.g., Erikson's psychosocial stages / Super's career development theory / solution-focused brief counseling] in under 300 words for a school counselor. Then give me: three things it means for students at my level, two strategies I can use this month, and one common misunderstanding to avoid. Flag anything I should verify in a primary source.` },
+      { t: "Infographic copy for families or staff", type: "comm", std: ["PF1"],
+        text: `${COACH}
+{ctx}
+
+Draft the text for a one-page infographic on [TOPIC, e.g., developmental milestones for kindergarteners / how teens process grief / tips for being successful in school]. Audience: [FAMILIES / TEACHERS]. Give me a headline, 5 to 7 short points, one "what you can do at home/in class" box, and a line on how to reach the school counselor. Reading level: grade 6 to 8.` },
+      { t: "Map my program to MTSS tiers", type: "plan", std: ["PF1"],
+        text: `${COACH}
+{ctx}
+
+Here are the services my program offers: [LIST SERVICES]
+
+Organize them into a multitiered system of supports table (Tier 1 for all students, Tier 2 for some, Tier 3 for few). For each, note the data that moves a student between tiers. Then point out gaps in any tier and suggest one addition.` },
+      { t: "Plan a staff PD session on a theory", type: "advo", std: ["PF1", "DS5"],
+        text: `${COACH}
+{ctx}
+
+Plan a [LENGTH]-minute professional development session I will lead for teachers on [THEORY OR TOPIC] and what it means for student success. Include: learning goals, agenda with timings, one interactive activity, a two-question exit ticket, and a one-page handout outline. This will become an artifact for my appraisal.` }
+    ]
+  },
+  {
+    id: "pf2", title: "Systems, policy and research", std: ["PF2"],
+    blurb: "Explain the system you work in, use research well, and make the case for your program.",
+    prompts: [
+      { t: "Policy and legislation briefing", type: "learn", std: ["PF2"],
+        text: `${COACH}
+{ctx}
+
+Summarize the federal and [STATE] laws, regulations and policies that most affect school counselors' work on [TOPIC, e.g., student records / college and career planning / suicide prevention / attendance]. For each, give a one-line plain-language summary and what it requires of me.
+
+Be explicit about uncertainty: mark anything that may have changed recently, and list the official sources I should check to verify it. This is not legal advice.` },
+      { t: "Rationale for our counseling program", type: "advo", std: ["PF2", "PF8"],
+        text: `${COACH}
+{ctx}
+
+Write a one-page rationale for a comprehensive school counseling program at my school. Include: what the program is, how academic, career and social/emotional counseling in schools differs from other counseling fields, the benefits for students, and three data points I should add from my own school: [ANY DATA YOU HAVE]. Audience: [BOARD / NEW PRINCIPAL / FAMILIES].` },
+      { t: "Research to inform a decision", type: "learn", std: ["PF2"],
+        text: `${COACH}
+I am considering [INTERVENTION OR PROGRAM] for [STUDENT NEED].
+
+Summarize what education research generally says about its effectiveness, the conditions where it works, and the risks. List the kinds of studies and authors I should look up. Important: do not invent citations. If you are not sure a specific study exists, say so, so I can verify every source before I cite it.`,
+        nb: "In NotebookLM, upload the actual articles you found and ask the same question. Answers will then cite only your sources." },
+      { t: "Student services roles and collaboration", type: "plan", std: ["PF2", "DS6"],
+        text: `${COACH}
+{ctx}
+
+Create a table that delineates the roles of the school counselor, school social worker, school psychologist and school nurse in my setting. Columns: role, primary focus, typical services, when to refer to them, how we collaborate. Then suggest three collaboration routines (meetings, shared referral steps) that reduce duplication.` }
+    ]
+  },
+  {
+    id: "pf3", title: "Legal and ethical practice", std: ["PF3"],
+    blurb: "Work through dilemmas with a model, communicate confidentiality limits and document your ethics learning.",
+    prompts: [
+      { t: "Walk through an ethical dilemma", type: "reflect", std: ["PF3"],
+        text: `${COACH}
+${DEID}
+
+Here is a de-identified situation: [DESCRIBE THE DILEMMA IN GENERAL TERMS]
+
+Walk me through an ethical decision-making model in accordance with the ASCA Ethical Standards for School Counselors: define the problem, apply the relevant standards (name them), consider the student's developmental level and the rights of families, list options and consequences, and identify who I should consult (by role) before acting. This is not legal advice; flag where I need district counsel or my supervisor.` },
+      { t: "Limits of confidentiality statement", type: "comm", std: ["PF3"],
+        text: `${COACH}
+{ctx}
+
+Write an age-appropriate "limits of confidentiality" statement for students in grades [GRADE BAND] that I can post in my office and say at the start of counseling sessions. Give a short poster version (under 60 words) and a spoken version. Then write a matching version for families. Keep it consistent with the ASCA Ethical Standards and remind me to check it against district policy.` },
+      { t: "Ethics and law learning plan", type: "learn", std: ["PF3", "PF4"],
+        text: `${COACH}
+{ctx}
+
+Build a 12-month professional learning plan on legal and ethical issues for school counselors. Prioritize: [TOPICS YOU FEEL LEAST SURE ABOUT]. For each quarter give a focus, one learning activity, and the documentation I should keep (certificate, notes, reflection) as an appraisal artifact.` }
+    ]
+  },
+  {
+    id: "pf4", title: "Professional growth", std: ["PF4"],
+    blurb: "Self-assess, reflect, seek consultation and plan your yearly growth.",
+    prompts: [
+      { t: "Yearly professional development plan", type: "plan", std: ["PF4"],
+        text: `${COACH}
+{ctx}
+
+Here are my self-ratings on the ASCA School Counselor Performance Appraisal (0 to 3): [PASTE RATINGS, or use "Copy my growth-plan prompt" in this dashboard]
+
+Write a yearly professional development plan. Pick three growth goals, each tied to a standard. For each goal: why it matters, two learning activities, a consultation or supervision step, the evidence I will collect, and a check-in date.` },
+      { t: "Weekly reflection routine", type: "reflect", std: ["PF4"],
+        text: `${COACH}
+Give me a 10-minute weekly reflection routine I can do on Fridays. Include five rotating reflection questions tied to the ASCA School Counselor Professional Standards & Competencies, a way to note one piece of appraisal evidence each week, and a monthly question that asks what I should bring to consultation or supervision. Format it as a short template I can copy into a notes app.` },
+      { t: "Research digest from an article", type: "learn", std: ["PF4", "PF2"],
+        text: `${COACH}
+Here is an article on school counseling practice: [PASTE TEXT OR ATTACH]
+
+Summarize it in five bullets, rate how strong the evidence is and why, list two practices I could try at the [SCHOOL LEVEL] level, and write one sentence I could use to cite it in my professional growth notes.`,
+        nb: "In NotebookLM, add several articles as sources and ask for a combined digest with citations to each." }
+    ]
+  },
+  {
+    id: "pf5", title: "Using the ASCA Student Standards", std: ["PF5"],
+    blurb: "Choose and prioritize Mindsets & Behaviors standards from data and school goals.",
+    prompts: [
+      { t: "Select standards from my data", type: "data", std: ["PF5", "DS1"],
+        text: `${COACH}
+{ctx}
+${DEID}
+
+Here is an aggregate summary of student data (attendance, grades, discipline, survey results): [PASTE SUMMARY TABLE]
+
+Recommend three to five ASCA Student Standards: Mindsets & Behaviors for Student Success that address the needs shown in this data. For each, cite the data point that justifies it and suggest one lesson or small-group topic.` },
+      { t: "Align standards with school improvement goals", type: "plan", std: ["PF5", "PA3"],
+        text: `${COACH}
+Our school improvement goals are: [PASTE GOALS]
+
+Prioritize the ASCA Mindsets & Behaviors standards that best support these goals. Give me a table: school goal, ASCA standard(s), counseling activity, grade level, and how I will measure impact. Keep it to the five highest-leverage rows.` },
+      { t: "Write competencies aligned to ASCA and state standards", type: "lesson", std: ["PF5"],
+        text: `${COACH}
+{ctx}
+
+Write grade-level competencies for grades [GRADE BAND] aligned with the ASCA Student Standards and with [STATE]'s school counseling or social-emotional learning standards on [TOPIC]. Phrase each as an observable "Students will..." statement. Note which state standards I should double-check against the official document.` },
+      { t: "How the standards support mental health", type: "comm", std: ["PF5"],
+        text: `${COACH}
+Write a short explanation for [FAMILIES / TEACHERS / BOARD] of how the ASCA Student Standards promote positive mental health development. Under 200 words, plain language, with two examples from [SCHOOL LEVEL] classrooms. Avoid clinical terms and make clear school counselors do not diagnose.` }
+    ]
+  },
+  {
+    id: "pf6", title: "Culture, context and high expectations", std: ["PF6"],
+    blurb: "Culturally sustaining practice, cross-cultural communication and honest bias reflection.",
+    prompts: [
+      { t: "Culturally sustaining review of a lesson", type: "lesson", std: ["PF6", "DS1"],
+        text: `${COACH}
+Here is a school counseling lesson I plan to teach: [PASTE LESSON]
+
+Review it for cultural responsiveness and access. Point out assumptions about family structure, language, income, religion or ability; examples that may not land for all students; and places to add student voice. Suggest specific rewrites, keeping my objectives and ASCA standards the same.` },
+      { t: "Family message across languages and cultures", type: "comm", std: ["PF6", "DS6"],
+        text: `${COACH}
+{ctx}
+
+Draft a message to families about [TOPIC]. Write it in plain language (grade 5 reading level), warm and specific, with one clear action. Then list cultural or communication considerations I should keep in mind for families who [DESCRIBE COMMUNITY CONTEXT].
+If I ask for a translation, remind me to have it checked by a qualified human translator before sending.` },
+      { t: "High expectations audit", type: "data", std: ["PF6", "PF9"],
+        text: `${COACH}
+${DEID}
+
+Here are aggregate counts of students by group in [ADVANCED COURSES / COLLEGE APPLICATIONS / CAREER PROGRAMS]: [PASTE TABLE]
+
+Identify where participation is uneven across groups, suggest likely contributing factors to investigate (not assume), and recommend two counselor actions that communicate high expectations for each and every student.` },
+      { t: "Bias and limits reflection", type: "reflect", std: ["PF6"],
+        text: `${COACH}
+Guide me through a private 15-minute reflection on my personal limitations and biases and how they may affect my work as a school counselor. Ask one question at a time, wait for my answer, and keep it non-judgmental. At the end, help me write two sentences for my professional growth plan.` }
+    ]
+  },
+  {
+    id: "pf7", title: "Program leadership", std: ["PF7"],
+    blurb: "Lead the program: structure, crisis role, school improvement and recognition.",
+    prompts: [
+      { t: "Program check against the ASCA National Model", type: "plan", std: ["PF7"],
+        text: `${COACH}
+{ctx}
+
+Here is a description of my school counseling program: [DESCRIBE OR PASTE]
+
+Assess it against the four components of the ASCA National Model (Define, Manage, Deliver, Assess). For each, rate it Not started / In progress / In place, list what is missing, and give the single highest-impact next step. End with a 90-day leadership plan.` },
+      { t: "Define our role in the crisis plan", type: "plan", std: ["PF7", "DS3", "DS6"],
+        text: `${COACH}
+{ctx}
+
+Help me write the school counselor's section of our school crisis plan. Cover before, during and after a crisis: roles, communication steps, which school and community professionals to involve, supports for students and staff, and follow-up. Format it as a checklist. Remind me to align it with district crisis procedures.` },
+      { t: "Bring the counseling view to school improvement", type: "advo", std: ["PF7", "PA3"],
+        text: `${COACH}
+I am on the school improvement team. Our draft goals are: [PASTE GOALS]
+
+Give me five talking points that bring the school counseling perspective to these goals: how counseling data, the ASCA Student Standards and our achievement gap plans can contribute. Suggest one goal or action step we should add.` },
+      { t: "RAMP and ACSC readiness check", type: "reflect", std: ["PF7", "PA8"],
+        text: `${COACH}
+{ctx}
+
+I am considering pursuing [RAMP (Recognized ASCA Model Program) / ACSC (ASCA-Certified School Counselor)]. Based on what I have in place, [LIST WHAT YOU HAVE], tell me what I would likely still need, in what order to build it, and a realistic timeline. Note anything I should confirm on ASCA's current official requirements.` }
+    ]
+  },
+  {
+    id: "pf8", title: "Advocacy", std: ["PF8"],
+    blurb: "Use data to advocate for students, appropriate duties and better ratios.",
+    prompts: [
+      { t: "Appropriate vs. inappropriate duties brief", type: "advo", std: ["PF8", "PA5"],
+        text: `${COACH}
+{ctx}
+
+My use-of-time data shows: [PASTE PERCENTAGES, e.g., 62% direct/indirect services, 38% other]. Non-counseling tasks I do include: [LIST].
+
+Write a respectful one-page brief for my principal that explains appropriate and inappropriate activities for school counselors, shows what my time data means for students, and proposes specific tasks to reassign and what students would gain from that time.` },
+      { t: "Board presentation on program results", type: "advo", std: ["PF8", "PA4"],
+        text: `${COACH}
+Outline a 10-minute presentation to our board of education on the school counseling program. I have this aggregate data: [PASTE]. Include a slide-by-slide outline, one student-success story told without identifying details, the key data visual for each section, and a closing ask (e.g., ratio, staffing, time).` },
+      { t: "Data infographic text", type: "comm", std: ["PF8", "PA4"],
+        text: `${COACH}
+Turn these school counseling results into infographic text for [FAMILIES / STAFF]: [PASTE RESULTS]. Give a headline, three big numbers with one-line explanations, a short "what this means for students" line, and a call to action. Keep every number exactly as I gave it.` },
+      { t: "Advocacy letter on counselor ratios", type: "advo", std: ["PF8"],
+        text: `${COACH}
+{ctx}
+
+Draft a short, professional letter to [DECISION-MAKER, e.g., state legislator / school board] advocating for a lower student-to-school-counselor ratio. Use my caseload of [CASELOAD], my program data [PASTE], and what students would gain. Under 300 words, respectful, one specific request. Remind me to follow district policy on advocacy communications.` }
+    ]
+  },
+  {
+    id: "pf9", title: "Systemic change", std: ["PF9"],
+    blurb: "Find barriers in the data and lead change that sticks.",
+    prompts: [
+      { t: "Find barriers in enrollment data", type: "data", std: ["PF9", "PA2"],
+        text: `${COACH}
+${DEID}
+
+Here are aggregate enrollment counts for [COURSES OR PROGRAMS] by student group: [PASTE TABLE].
+
+Calculate participation rates by group, identify the largest gaps, and list policies, procedures or practices (prerequisites, recommendation processes, scheduling, information access) that might create those gaps. Mark which are hypotheses I should test with more data.` },
+      { t: "Policy impact review", type: "data", std: ["PF9"],
+        text: `${COACH}
+Here is a school or district policy or practice: [PASTE OR DESCRIBE]. Here is related aggregate data: [PASTE].
+
+Analyze how the policy may support or impede student success, who is most affected, and what data would confirm it. Draft a short, neutral memo to administrators recommending a review.` },
+      { t: "Plan for resistance to change", type: "plan", std: ["PF9", "PF7"],
+        text: `${COACH}
+I want to change [PRACTICE] so that more students [OUTCOME]. Expected concerns from staff or families: [LIST].
+
+Build a change plan: who to involve early, how to present the data, how to address each concern, a small pilot, and how to measure and share results. Include sample language for the first conversation.` },
+      { t: "Tell the postsecondary outcomes story", type: "data", std: ["PF9", "PA4"],
+        text: `${COACH}
+Here is aggregate postsecondary data for our graduates (for example, National Student Clearinghouse enrollment and persistence by year and group): [PASTE].
+
+Summarize trends, gaps between groups, and what changed after [PROGRAM OR CHANGE]. Write a 150-word summary for staff and suggest one chart that would show it best.` }
+    ]
+  },
+  {
+    id: "ds1", title: "Classroom and group instruction", std: ["DS1"],
+    blurb: "Data-driven lessons aligned to Mindsets & Behaviors, with results you can measure.",
+    prompts: [
+      { t: "Lesson plan builder", type: "lesson", std: ["DS1", "PF5"],
+        text: `${COACH}
+{ctx}
+
+Create a school counseling lesson plan for [GRADE] on [TOPIC], [LENGTH] minutes. Include: ASCA Mindsets & Behaviors standard(s), learning objectives, materials, the procedure step by step, how I will engage every student, a culturally sustaining classroom management note, and the plan to collect participation data, Mindsets & Behaviors data (pre/post) and outcome data. Note which data I need from teachers.` },
+      { t: "Pre/post assessment items", type: "lesson", std: ["DS1"],
+        text: `${COACH}
+Write a short pre/post assessment (5 items) for a [GRADE] lesson on [TOPIC] aligned to [ASCA STANDARD]. Include three knowledge or skill items and two attitude items on a 4-point scale. Keep the reading level appropriate, and explain how I will score and compare results.` },
+      { t: "Analyze lesson results", type: "data", std: ["DS1", "PA4"],
+        text: `${COACH}
+${DEID}
+
+Here are aggregate pre/post results and participation counts from my lesson series: [PASTE TABLE]
+
+Tell me what changed, by how much, and whether the change is meaningful. Identify any group that gained less. Write a three-sentence results summary for my data report and one change for next time.` },
+      { t: "Use technology to deliver a lesson", type: "lesson", std: ["DS1"],
+        text: `${COACH}
+I am teaching [TOPIC] to [GRADE]. Suggest three ways to use technology (for example, polling, digital exit tickets, short videos, collaborative boards) to increase engagement and collect data. For each, note the access or privacy issue to check with my district first.` }
+    ]
+  },
+  {
+    id: "ds2", title: "Appraisal, advisement and career", std: ["DS2"],
+    blurb: "Interest inventories, labor market context, postsecondary planning and financial aid.",
+    prompts: [
+      { t: "Career lesson from interest inventories", type: "lesson", std: ["DS2"],
+        text: `${COACH}
+{ctx}
+
+Design a lesson for [GRADE] that helps students cross-reference their interest inventory results (for example, Holland Code or O*NET Interest Profiler) with careers and the courses or training that lead to them. Include a student worksheet, a pairing activity, and a reflection question that connects academic performance to the world of work.` },
+      { t: "Labor market snapshot for my region", type: "learn", std: ["DS2"],
+        text: `${COACH}
+Give me a student-friendly overview of growing career fields in [REGION], including typical training paths (apprenticeship, certificate, two-year, four-year) and why they are growing. Clearly mark that labor market figures change and tell me which official sources to check for current numbers before I share them.` },
+      { t: "Family guide to postsecondary and financial aid", type: "comm", std: ["DS2"],
+        text: `${COACH}
+{ctx}
+
+Write a family-friendly guide to the postsecondary planning process for [GRADE] students: awareness, exploration, admissions and financial aid. Use a month-by-month checklist, explain key terms in one line each, and include "questions to ask your school counselor." Remind me to verify current financial aid dates and forms.` },
+      { t: "Graduation and postsecondary plan conference", type: "plan", std: ["DS2"],
+        text: `${COACH}
+Create a 20-minute conversation guide for a planning meeting with a student and family. Cover graduation progress, interests and strengths, postsecondary options, and next steps. Include open-ended questions, a one-page plan template to fill in together, and how to follow up.` },
+      { t: "Work-based learning connections", type: "plan", std: ["DS2", "DS6"],
+        text: `${COACH}
+{ctx}
+
+I want to connect more students to workplace experiences in [CAREER AREAS]. Suggest a plan: types of experiences (job shadow, career day, site visit, internship), how to recruit local employers, how to make access fair for all students, and how to collect data on participation and student learning.` }
+    ]
+  },
+  {
+    id: "ds3", title: "Short-term counseling and crisis response", std: ["DS3"],
+    blurb: "Data-informed small groups, trauma-informed practice and crisis readiness.",
+    prompts: [
+      { t: "Small-group plan", type: "lesson", std: ["DS3", "PF5"],
+        text: `${COACH}
+{ctx}
+
+Design a [NUMBER]-session small group for [GRADE] students on [FOCUS, e.g., test anxiety / transitions / friendship skills]. Include: ASCA Mindsets & Behaviors standards, how students are identified using data, session-by-session outline, family communication, and the participation, Mindsets & Behaviors and outcome data I will collect.` },
+      { t: "Data criteria to identify students for support", type: "data", std: ["DS3", "PA3"],
+        text: `${COACH}
+${DEID}
+
+Help me set fair, data-based criteria for identifying students who may need short-term counseling support, using indicators like attendance, course failures, discipline referrals and screening results. Suggest thresholds, how to combine indicators, and how to check that the criteria do not over- or under-identify any group. Do not ask for individual student records.` },
+      { t: "Trauma-informed practices for staff", type: "advo", std: ["DS3", "DS5"],
+        text: `${COACH}
+Create a 20-minute staff presentation on adverse childhood experiences, trauma and trauma-informed classroom practices. Include an outline, five practical classroom strategies, what to refer to the school counselor, and a one-page handout. Keep it strengths-based and avoid clinical diagnosis language.` },
+      { t: "Short-term counseling vs. therapy explainer", type: "comm", std: ["DS3", "DS4"],
+        text: `${COACH}
+Write a brief explanation for families and staff of why school counselors provide short-term counseling and why long-term therapy and diagnosis are outside our role, and how we connect families to community providers. Under 200 words, warm and clear.` }
+    ]
+  },
+  {
+    id: "ds4", title: "Referrals and resources", std: ["DS4"],
+    blurb: "Keep a current resource list and explain the continuum of mental health services.",
+    prompts: [
+      { t: "Organize my referral resource list", type: "plan", std: ["DS4"],
+        text: `${COACH}
+{ctx}
+
+Help me organize a referral resource list for students, staff and families. Create a template with columns: need area (academic, career, social/emotional), service type, provider, cost, languages, how to refer, and last verified date. Suggest categories I may be missing for [COMMUNITY]. Do not invent provider names or numbers; I will fill in and verify every resource.` },
+      { t: "Continuum of mental health services", type: "comm", std: ["DS4"],
+        text: `${COACH}
+Explain the continuum of mental health services from school-based prevention to community treatment in a one-page handout for families. Show where the school counselor fits, what we can and cannot do, and how a referral works. Plain language, no diagnostic terms.` },
+      { t: "School counseling brochure", type: "comm", std: ["DS4", "PF8"],
+        text: `${COACH}
+{ctx}
+
+Write the text for a tri-fold school counseling brochure: who we are, how students and families can reach us, what we offer (academic, career, social/emotional), limits of confidentiality in one line, and how referrals to outside resources work. Short, welcoming, scannable.` }
+    ]
+  },
+  {
+    id: "ds5", title: "Consultation", std: ["DS5"],
+    blurb: "Consult with teachers and families and share your expertise through workshops.",
+    prompts: [
+      { t: "Plan a consultation with a teacher", type: "plan", std: ["DS5"],
+        text: `${COACH}
+${DEID}
+
+A teacher has raised a concern: [DESCRIBE IN GENERAL TERMS]. Plan a 15-minute consultation: questions to gather information on the student's needs, strategies to suggest, how we will monitor progress, and when to follow up. Include a short note-taking template.` },
+      { t: "Family workshop", type: "advo", std: ["DS5", "DS6"],
+        text: `${COACH}
+{ctx}
+
+Plan a 45-minute family workshop on [TOPIC, e.g., why school attendance matters / helping with homework / navigating middle school]. Include: agenda, key messages, one interactive moment, take-home handout outline, a way to collect family feedback, and ideas to make it accessible (timing, language, childcare, virtual option).` },
+      { t: "Strategy handout for teachers", type: "comm", std: ["DS5"],
+        text: `${COACH}
+Write a one-page teacher handout with practical strategies for supporting students who [NEED, e.g., struggle with organization / show anxiety before tests]. Include five classroom strategies, what to try first, what to document, and when to involve the school counselor.` }
+    ]
+  },
+  {
+    id: "ds6", title: "Collaboration and partnerships", std: ["DS6"],
+    blurb: "Partner for student opportunity, handle dual roles and supervise interns well.",
+    prompts: [
+      { t: "Map our partners", type: "plan", std: ["DS6"],
+        text: `${COACH}
+{ctx}
+
+Help me build a partner map for my school counseling program: families, staff, administrators, community organizations, employers, colleges. For each, the shared goal, how we work together now, and one opportunity to deepen the partnership for student achievement. Format as a table.` },
+      { t: "Dual roles reflection", type: "reflect", std: ["DS6", "PF3"],
+        text: `${COACH}
+Explain the potential for dual roles between school counselors and families or other caretakers, with three realistic examples in a [SCHOOL LEVEL] setting (for example, knowing a family socially, coaching, small-town connections). For each, describe the risk and how to set boundaries consistent with the ASCA Ethical Standards.` },
+      { t: "Intern supervision plan", type: "plan", std: ["DS6", "PF4"],
+        text: `${COACH}
+I am supervising a school counseling intern this [SEMESTER/YEAR]. Create a supervision plan consistent with the ASCA School Counselor Professional Standards & Competencies: orientation checklist, a week-by-week progression of responsibilities, weekly supervision agenda, and how I will give feedback and evaluate.` }
+    ]
+  },
+  {
+    id: "pa1", title: "Vision and mission alignment", std: ["PA1"],
+    blurb: "Connect your program to the school and district vision and say it clearly.",
+    prompts: [
+      { t: "Program-to-mission alignment statement", type: "plan", std: ["PA1"],
+        text: `${COACH}
+Our school vision: [PASTE]. Our district mission: [PASTE]. Our school counseling program focuses on: [DESCRIBE].
+
+Analyze the vision and mission, then write a one-paragraph statement of how the school counseling program aligns with them, plus a three-row table: mission phrase, counseling program practice, evidence I can show.` },
+      { t: "Beliefs analysis", type: "reflect", std: ["PA1"],
+        text: `${COACH}
+Help me analyze personal, school, district and state beliefs and assumptions about student success. Ask me five questions one at a time about what I and my school believe, then point out where the beliefs align, where they conflict, and what that means for my school counseling program.` },
+      { t: "Thirty-second alignment pitch", type: "advo", std: ["PA1", "PF8"],
+        text: `${COACH}
+Write three versions of a 30-second explanation of how our school counseling program advances the school's mission: one for teachers, one for families and one for administrators. Mission: [PASTE]. Program highlights: [LIST].` }
+    ]
+  },
+  {
+    id: "pa2", title: "Finding achievement gaps", std: ["PA2"],
+    blurb: "Disaggregate achievement and contributing-factors data and set goals to close gaps.",
+    prompts: [
+      { t: "Disaggregate and interpret achievement data", type: "data", std: ["PA2"],
+        text: `${COACH}
+${DEID}
+
+Here is an aggregate table of [ACHIEVEMENT MEASURE] by student group: [PASTE TABLE OR ATTACH CSV]
+
+Identify areas of success and gaps between and among groups. Show the size of each gap, which gaps are largest and most persistent, and what questions the data raises. Do not draw causal conclusions; list what I would need to know next.`,
+        nb: "In NotebookLM, upload de-identified data reports and ask it to cite the page or table for each gap it names." },
+      { t: "Contributing-factors analysis", type: "data", std: ["PA2", "PA3"],
+        text: `${COACH}
+${DEID}
+
+Here is aggregate contributing-factors data (attendance, discipline, course failures, survey results) by group: [PASTE]
+
+Connect it to the achievement gap in [AREA]. Which factors show the strongest relationship? Which are within the school counseling program's reach? Recommend strategies and interventions to consider.` },
+      { t: "Write goals to close a gap", type: "plan", std: ["PA2", "PA3"],
+        text: `${COACH}
+Baseline: [BASELINE DATA]. Target group: [GROUP DESCRIBED IN AGGREGATE]. Timeframe: [DATES].
+
+Write two measurable goals to close this achievement gap. Include baseline and projected final data in each goal statement, in the format "By [date], [measure] for [group] will increase/decrease from [baseline] to [target]." Explain why the target is ambitious but realistic.` }
+    ]
+  },
+  {
+    id: "pa3", title: "Achievement gap plans", std: ["PA3"],
+    blurb: "Build, communicate and refine an annual achievement gap plan.",
+    prompts: [
+      { t: "Draft an achievement gap plan", type: "plan", std: ["PA3", "PF5"],
+        text: `${COACH}
+{ctx}
+${DEID}
+
+School counseling data priority: [PRIORITY]. School improvement goal it supports: [GOAL]. Aggregate baseline: [DATA].
+
+Draft an achievement gap plan with: measurable goal (baseline and target), the student group described in aggregate, contributing-factors data, ASCA Mindsets & Behaviors standards, evidence-based curricula or activities, resources needed, timeline, how I will collect participation, Mindsets & Behaviors and outcome data, and how I will communicate the plan to staff.` },
+      { t: "Student and partner perspective survey", type: "data", std: ["PA3"],
+        text: `${COACH}
+Write a short anonymous survey (8 items) to gather student and education partner perspectives on factors contributing to [ACHIEVEMENT ISSUE]. Mix scaled and open-ended items, keep the reading level appropriate for [GRADE BAND], and include a sentence on how responses stay anonymous.` },
+      { t: "Mid-year check and refine", type: "data", std: ["PA3", "PA4"],
+        text: `${COACH}
+${DEID}
+
+My achievement gap plan goal: [GOAL]. Mid-year aggregate data: [PASTE]. Feedback from students and staff: [SUMMARIZE].
+
+Tell me if I am on track, what is working, what to adjust, and how to document the refinement so it becomes evidence for my appraisal.` },
+      { t: "Action research basics", type: "learn", std: ["PA3"],
+        text: `${COACH}
+Explain in plain language the research concepts I need for action research on my achievement gap plan: sampling, comparison groups, pre/post design, effect size and why correlation is not causation. Use examples from school counseling and finish with a checklist for my own plan.` }
+    ]
+  },
+  {
+    id: "pa4", title: "Assessing and reporting impact", std: ["PA4"],
+    blurb: "Show the value your program adds and present it with confidence.",
+    prompts: [
+      { t: "Results report narrative", type: "data", std: ["PA4"],
+        text: `${COACH}
+${DEID}
+
+Here are my aggregate results for [PROGRAM OR PLAN]: participation data [PASTE], Mindsets & Behaviors data [PASTE], outcome data [PASTE].
+
+Write a results report: what we did, who participated, what changed, what it means for students, and what we will change next year. Keep every number exactly as given and mark any conclusion the data cannot support.` },
+      { t: "Impact presentation for staff or board", type: "advo", std: ["PA4", "PF8"],
+        text: `${COACH}
+Build a 6-slide outline to share school counseling effectiveness data with [AUDIENCE]. For each slide: headline written as a takeaway, the one chart to show, and speaker notes of two or three sentences. Data: [PASTE].` },
+      { t: "Agree on how we assess the program", type: "plan", std: ["PA4", "PA6"],
+        text: `${COACH}
+{ctx}
+
+Draft an agenda and discussion guide for a meeting with my counseling team and administration to decide how we assess the school counseling program and share its impact. Include proposed measures for access, life-readiness and achievement, a reporting calendar, and who owns each step.` }
+    ]
+  },
+  {
+    id: "pa5", title: "Use of time", std: ["PA5"],
+    blurb: "Aim for 80% or more in direct and indirect student services.",
+    prompts: [
+      { t: "Use-of-time analysis", type: "data", std: ["PA5"],
+        text: `${COACH}
+Here is my time log for [NUMBER] weeks by activity: [PASTE LOG OR TOTALS].
+
+Classify each activity as direct student services, indirect student services, program planning and school support, or non-school-counseling tasks. Calculate the percentages and compare them with the recommendation of 80% or more in direct and indirect student services and 20% or less in program planning and school support. Suggest three changes to move closer.` },
+      { t: "Annual and weekly calendar builder", type: "plan", std: ["PA5", "DS1"],
+        text: `${COACH}
+{ctx}
+
+Build an annual school counseling calendar for [SCHOOL YEAR] with monthly priorities (lessons, small groups, family events, data reviews, advisory council, administrator conference). Then build a model weekly calendar that protects time for direct services. Note which events to publicize to families and staff.` },
+      { t: "Fair-share duties review", type: "reflect", std: ["PA5", "PF8"],
+        text: `${COACH}
+I currently cover these duties: [LIST]. Help me evaluate which are fair-share responsibilities that all staff share and which are inappropriate for a school counselor. For any to reduce, suggest a respectful way to raise it and an alternative way the duty could be covered.` }
+    ]
+  },
+  {
+    id: "pa6", title: "Annual administrator agreement", std: ["PA6"],
+    blurb: "Prepare for, hold and finalize the annual administrator conference.",
+    prompts: [
+      { t: "Prepare for the administrator conference", type: "plan", std: ["PA6"],
+        text: `${COACH}
+{ctx}
+
+Help me prepare for my annual administrator conference. I want to agree on: program priorities, achievement gap goals and their link to the school improvement plan, use of time, calendar, professional development and how results will be shared. Give me a one-page agenda, the data to bring, and the two decisions I most need.` },
+      { t: "Talking points on use of counselor time", type: "advo", std: ["PA6", "PA5"],
+        text: `${COACH}
+My principal is considering assigning me [DUTY]. Write respectful talking points that advocate for the appropriate use of school counselor time based on national recommendations and my student data [PASTE]. Offer a compromise and what students gain.` },
+      { t: "Follow-up summary to my administrator", type: "comm", std: ["PA6"],
+        text: `${COACH}
+Here are my notes from the administrator conference: [PASTE NOTES]. Draft a short follow-up email to my principal summarizing what we agreed, next steps with dates, and a request to sign the finalized conference document. Professional and brief.` }
+    ]
+  },
+  {
+    id: "pa7", title: "Advisory council", std: ["PA7"],
+    blurb: "Build a council that informs and improves the program.",
+    prompts: [
+      { t: "Plan council membership", type: "plan", std: ["PA7"],
+        text: `${COACH}
+{ctx}
+
+Recommend the education partners to include on my school counseling advisory council (roles only), how many members, how to recruit for diverse perspectives, and a meeting schedule (at least twice a year). Give me a short invitation message.` },
+      { t: "Advisory council agenda", type: "plan", std: ["PA7"],
+        text: `${COACH}
+Create a 60-minute agenda for our [FALL/SPRING] advisory council meeting. Include: welcome and purpose, how the program aligns with the school and district mission, school data and school counseling data priorities, our plans (achievement gap, ASCA Student Standards delivery plan, lessons and small groups), program assessment, and structured feedback time.` },
+      { t: "Minutes from my notes", type: "comm", std: ["PA7"],
+        text: `${COACH}
+Turn my rough notes from today's advisory council meeting into clean minutes: attendees by role, key points, feedback received, decisions and action items with owners. Notes: [PASTE]. Keep it to one page.` },
+      { t: "Synthesize council feedback", type: "data", std: ["PA7", "PA3"],
+        text: `${COACH}
+Here is feedback from our advisory council: [PASTE]. Group it into themes, note which themes connect to our school counseling data priorities and plans, and recommend which feedback to incorporate now, later or not at all, with a reason for each.`,
+        nb: "In NotebookLM, upload past minutes and feedback as sources to see themes across years." }
+    ]
+  },
+  {
+    id: "pa8", title: "Appraisal evidence and process", std: ["PA8"],
+    blurb: "Document your work so evaluators can see it, and advocate for a fair process.",
+    prompts: [
+      { t: "Evidence binder organizer", type: "reflect", std: ["PA8"],
+        text: `${COACH}
+Here is a list of my artifacts: [LIST FILE NAMES OR DESCRIPTIONS].
+
+Organize them by the standards in the ASCA School Counselor Performance Appraisal. Show which standards have strong evidence, which have thin evidence, and which have none. Suggest a folder structure and a one-line caption for each artifact explaining what it proves.` },
+      { t: "Narrative self-evaluation for one standard", type: "reflect", std: ["PA8"],
+        text: `${COACH}
+Write a 200-word self-evaluation narrative for the standard "[STANDARD]". My evidence: [DESCRIBE ARTIFACTS AND DATA]. My self-rating: [0 to 3]. Use first person, cite specific evidence, explain impact on students with data, and end with my next growth step.` },
+      { t: "Prepare for my appraisal conference", type: "reflect", std: ["PA8", "PA6"],
+        text: `${COACH}
+My appraisal conference is coming up with [EVALUATOR ROLE]. My strongest standards are [LIST]; my growth areas are [LIST]. Help me prepare: the three pieces of evidence to lead with, how to discuss growth areas honestly, questions to ask my evaluator, and a goal I can propose for next year.` },
+      { t: "Advocate for a counselor-specific appraisal", type: "advo", std: ["PA8", "PF8"],
+        text: `${COACH}
+Our district evaluates school counselors with [CURRENT TOOL, e.g., a teacher rubric]. Write a respectful proposal explaining why an appraisal based on school counselor standards and implementation of the school counseling program is more accurate, how our activities fit its categories, and a pilot plan.` }
+    ]
+  }
+];
+// New York State Portrait of a Graduate (NY Inspires). Draft alignment.
+const POG = [
+  { id: "AP", name: "Academically Prepared", short: "Academic", desc: "A strong foundation in the learning standards and the knowledge and skills for college, careers, civic life and beyond." },
+  { id: "CI", name: "Creative Innovator", short: "Creative", desc: "Uses imagination, curiosity and flexible thinking to solve problems, create new ideas and adapt to change." },
+  { id: "CT", name: "Critical Thinker", short: "Critical", desc: "Analyzes information, weighs evidence and connects ideas across subjects to work on complex issues." },
+  { id: "EC", name: "Effective Communicator", short: "Communicator", desc: "Expresses ideas clearly in speech, writing and media, and listens to diverse audiences." },
+  { id: "GC", name: "Global Citizen", short: "Global", desc: "Acts responsibly and ethically in local, global and digital communities." },
+  { id: "RF", name: "Reflective and Future Focused", short: "Future focused", desc: "Reflects on strengths and growth, sets goals, keeps supportive relationships and makes responsible decisions for well-being." }
+];
+const POG_BY_ID = Object.fromEntries(POG.map((a) => [a.id, a]));
+const POG_NOTE = "Note: New York's Portrait of a Graduate (part of NY Inspires) names six attributes: Academically Prepared, Creative Innovator, Critical Thinker, Effective Communicator, Global Citizen, and Reflective and Future Focused. State guidance on credits, competencies and how students show proficiency is still being developed, so treat any alignment as a draft and check it against current NYSED materials.";
+const MADEUP = "Use only grade bands or a made-up example student. Do not include any real student's name or details.";
+
+// Which Portrait attributes each appraisal standard's work supports in students (draft).
+const CROSSWALK = {
+  M1: ["AP", "RF"], M2: ["AP", "GC"], M3: ["AP", "RF"], M4: ["RF", "GC"], M5: ["EC", "GC"], M6: ["EC", "GC"], M7: ["AP", "RF", "GC"],
+  PF1: ["AP", "RF"], PF2: ["AP", "CT"], PF3: ["GC", "RF"], PF4: ["RF"], PF5: ["AP", "EC", "RF"], PF6: ["GC", "EC"], PF7: ["AP", "RF"], PF8: ["AP", "GC"], PF9: ["AP", "GC"],
+  DS1: ["AP", "CT", "EC", "RF"], DS2: ["RF", "AP", "CI"], DS3: ["RF"], DS4: ["RF"], DS5: ["AP", "EC"], DS6: ["GC", "RF"],
+  PA1: ["AP", "RF"], PA2: ["AP"], PA3: ["AP", "RF"], PA4: ["AP", "RF"], PA5: ["RF", "AP"], PA6: ["AP", "RF"], PA7: ["GC", "EC"], PA8: ["RF"]
+};
+
+// Attributes each existing prompt builds (draft).
+const POG_MAP = {
+  "start-0": ["RF"], "start-1": ["RF"], "start-2": ["RF"],
+  "mindsets-0": ["AP", "RF", "GC"], "mindsets-1": ["RF"], "mindsets-2": ["GC", "AP"], "mindsets-3": ["EC", "GC"],
+  "pf1-0": ["AP", "RF"], "pf1-1": ["EC", "RF"], "pf1-2": ["AP", "RF"], "pf1-3": ["AP", "CT"],
+  "pf2-0": ["AP", "GC"], "pf2-1": ["AP", "RF"], "pf2-2": ["CT", "AP"], "pf2-3": ["RF"],
+  "pf3-0": ["GC", "CT"], "pf3-1": ["GC", "RF"], "pf3-2": ["GC"],
+  "pf4-0": ["RF"], "pf4-1": ["RF"], "pf4-2": ["CT"],
+  "pf5-0": ["AP", "RF"], "pf5-1": ["AP"], "pf5-2": ["AP", "EC", "RF"], "pf5-3": ["RF"],
+  "pf6-0": ["GC", "EC"], "pf6-1": ["EC", "GC"], "pf6-2": ["AP", "GC"], "pf6-3": ["GC", "RF"],
+  "pf7-0": ["AP", "RF"], "pf7-1": ["RF", "GC"], "pf7-2": ["AP"], "pf7-3": ["RF"],
+  "pf8-0": ["AP", "RF"], "pf8-1": ["AP", "EC"], "pf8-2": ["EC"], "pf8-3": ["AP", "RF"],
+  "pf9-0": ["AP", "GC"], "pf9-1": ["CT", "GC"], "pf9-2": ["CI", "CT"], "pf9-3": ["RF", "AP"],
+  "ds1-0": ["AP", "CT", "EC"], "ds1-1": ["AP", "RF"], "ds1-2": ["AP", "CT"], "ds1-3": ["CI", "EC", "GC"],
+  "ds2-0": ["RF", "CT"], "ds2-1": ["RF", "GC"], "ds2-2": ["RF", "AP"], "ds2-3": ["RF", "AP"], "ds2-4": ["RF", "CI", "EC"],
+  "ds3-0": ["RF", "EC"], "ds3-1": ["RF", "AP"], "ds3-2": ["RF"], "ds3-3": ["RF"],
+  "ds4-0": ["RF"], "ds4-1": ["RF"], "ds4-2": ["EC", "RF"],
+  "ds5-0": ["AP", "RF"], "ds5-1": ["AP", "EC"], "ds5-2": ["AP", "RF"],
+  "ds6-0": ["GC", "RF"], "ds6-1": ["GC"], "ds6-2": ["RF"],
+  "pa1-0": ["AP", "RF"], "pa1-1": ["RF", "CT"], "pa1-2": ["EC"],
+  "pa2-0": ["AP"], "pa2-1": ["AP", "RF"], "pa2-2": ["AP"],
+  "pa3-0": ["AP", "RF"], "pa3-1": ["EC", "GC"], "pa3-2": ["AP"], "pa3-3": ["CT"],
+  "pa4-0": ["AP", "RF"], "pa4-1": ["EC"], "pa4-2": ["AP"],
+  "pa5-0": ["RF"], "pa5-1": ["AP", "RF"], "pa5-2": ["RF"],
+  "pa6-0": ["AP", "RF"], "pa6-1": ["RF"], "pa6-2": ["EC"],
+  "pa7-0": ["GC", "EC"], "pa7-1": ["EC", "GC"], "pa7-2": ["EC"], "pa7-3": ["GC", "CT"],
+  "pa8-0": ["RF"], "pa8-1": ["RF"], "pa8-2": ["RF"], "pa8-3": ["RF"]
+};
+const ALL6 = ["AP", "CI", "CT", "EC", "GC", "RF"];
+
+const NY_MODULES = [
+  {
+    id: "ny-crosswalk", title: "Portrait crosswalk", std: ["PF5", "PA1", "PF7"], ny: true,
+    blurb: "Map your program and the ASCA standards to New York's six Portrait attributes, so your role in NY Inspires is clear.",
+    prompts: [
+      { t: "Crosswalk my program to the Portrait", type: "plan", std: ["PA1", "PF7", "PF5"], pog: ALL6,
+        text: `${COACH}
+{ctx}
+${POG_NOTE}
+
+Here are the main parts of my school counseling program (lessons, small groups, advisement, events): [LIST PROGRAM ACTIVITIES]
+
+Build a table with one row per activity and a column for each of the six Portrait attributes. Mark which attributes each activity builds and explain each mark in a few words. Then show which attributes my program covers well, which are thin, and suggest two activities to strengthen the thinnest one.` },
+      { t: "Explain how one ASCA standard builds the Portrait", type: "reflect", std: ["PA8", "PA1"], pog: ALL6,
+        text: `${COACH}
+${POG_NOTE}
+
+Explain how my work on the ASCA appraisal standard "[STANDARD, e.g., DS2 Appraisal and advisement]" builds the Portrait of a Graduate attributes in students at the [SCHOOL LEVEL] level. Give one concrete example per attribute it supports, the evidence I could show, and two sentences I could use in my appraisal narrative or with my principal.` },
+      { t: "Crosswalk ASCA Mindsets & Behaviors to the Portrait", type: "plan", std: ["PF5", "DS1"], pog: ALL6,
+        text: `${COACH}
+{ctx}
+${POG_NOTE}
+
+Create a crosswalk table between the ASCA Student Standards: Mindsets & Behaviors for Student Success and the six Portrait attributes. For each attribute, list the Mindsets & Behaviors standards that most directly build it and one lesson or small-group idea for grades [GRADE BAND]. Mark anything that is my interpretation rather than official guidance.` },
+      { t: "Build the crosswalk from your sources", type: "reflect", std: ["PA1", "PA8"], pog: ALL6,
+        text: `Using only the sources in this notebook, build a crosswalk between the ASCA School Counselor Performance Appraisal standards and New York's Portrait of a Graduate attributes. For each attribute, cite the appraisal standards and the documents in my notebook that show how my program builds it. List attributes where my sources show little evidence.
+
+${POG_NOTE}`,
+        nb: "Built for NotebookLM. Upload the appraisal PDF, NYSED's Portrait of a Graduate document and your own de-identified program documents as sources." }
+    ]
+  },
+  {
+    id: "ny-capstone", title: "Capstone and portfolio coaching", std: ["DS1", "DS2", "PA3"], ny: true,
+    blurb: "Advisory lessons, reflection guides and portfolio checkpoints that help students show the Portrait attributes as New York moves toward competency-based graduation.",
+    prompts: [
+      { t: "Advisory lesson series on the Portrait", type: "lesson", std: ["DS1", "PF5"], pog: ALL6,
+        text: `${COACH}
+{ctx}
+${POG_NOTE}
+
+Design a six-lesson advisory series for grades [GRADE BAND] that introduces the Portrait of a Graduate, one attribute per lesson. For each lesson: objective, a 20-minute activity, a link to an ASCA Mindsets & Behaviors standard, a quick reflection, and one piece of evidence students could save for a portfolio. ${MADEUP}` },
+      { t: "Student reflection guide by attribute", type: "lesson", std: ["DS1", "DS2"], pog: ["RF", "EC", "CT"],
+        text: `${COACH}
+${POG_NOTE}
+
+Write a student reflection guide for grades [GRADE BAND] with three age-appropriate reflection questions for each of the six Portrait attributes. Include sentence starters for students who need support, and a short rubric-free checklist students can use to decide whether a piece of work shows an attribute. Keep it at a [READING LEVEL] reading level. ${MADEUP}` },
+      { t: "Portfolio checkpoints by grade", type: "plan", std: ["DS2", "PA5", "PA3"], pog: ALL6,
+        text: `${COACH}
+{ctx}
+${POG_NOTE}
+
+Draft a portfolio checkpoint plan for grades [GRADE BAND]. For each grade and semester: which Portrait attributes to focus on, the kinds of evidence students collect, when the counselor or advisor reviews it, and how families are included. Keep it workable for a caseload of [CASELOAD] students. Mark where my district will need state guidance before finalizing. ${MADEUP}` },
+      { t: "Capstone conference protocol", type: "plan", std: ["DS2", "DS6"], pog: ["RF", "EC", "CT", "CI"],
+        text: `${COACH}
+${POG_NOTE}
+
+Write a 20-minute student-led capstone or portfolio conference protocol for [GRADE]. Include roles for the student, counselor and family, an agenda, questions that draw out each Portrait attribute, and a one-page notes form. Then model a short sample conference using a made-up student, "Jordan," who is interested in [INTEREST]. ${MADEUP}` },
+      { t: "Coach staff to support student reflection", type: "advo", std: ["DS5", "PF7"], pog: ["RF", "EC"],
+        text: `${COACH}
+${POG_NOTE}
+
+Plan a 30-minute staff session I will lead on coaching students to reflect on and document the Portrait attributes. Include the agenda, two short practice scenarios with made-up students, three coaching questions teachers can use in any class, and how teachers hand off to the school counselor.` }
+    ]
+  },
+  {
+    id: "ny-future", title: "Future-focused planning for the whole caseload", std: ["DS2", "PA5"], ny: true,
+    blurb: "Grade-by-grade career and college planning sequences built for a whole caseload, not one student at a time.",
+    prompts: [
+      { t: "Grade-by-grade planning sequence", type: "plan", std: ["DS2", "PA5"], pog: ["RF", "AP", "CI"],
+        text: `${COACH}
+{ctx}
+${POG_NOTE}
+
+Build a career and college planning sequence for every grade in [GRADE BAND]. For each grade: the goal, two to three classroom or group activities, one individual or family touchpoint, the assessment or inventory used, and the evidence students keep for their portfolio. Show how the sequence builds Reflective and Future Focused across the years.` },
+      { t: "Caseload planning calendar", type: "plan", std: ["PA5", "DS2"], pog: ["RF", "AP"],
+        text: `${COACH}
+{ctx}
+
+Create a year-long calendar that makes sure every student on a caseload of [CASELOAD] in grades [GRADE BAND] gets these planning touchpoints: [LIST TOUCHPOINTS, e.g., interest inventory, course selection, postsecondary plan review]. Show the month, the format (classroom, small group, individual), how many students per week that requires, and where my time is tight. Do not ask for any student names.` },
+      { t: "Goal-setting lessons for one grade", type: "lesson", std: ["DS1", "DS2"], pog: ["RF", "CT"],
+        text: `${COACH}
+{ctx}
+${POG_NOTE}
+
+Write three short goal-setting lessons for [GRADE] that build the Reflective and Future Focused attribute: setting a goal, planning steps and checking progress. Include an ASCA Mindsets & Behaviors standard for each, a worksheet outline, and a pre/post question. Use a made-up example student in any model goal.` },
+      { t: "Check planning completion with aggregate data", type: "data", std: ["DS2", "PA4"], pog: ["RF", "AP"],
+        text: `${COACH}
+${DEID}
+
+Here are aggregate completion rates for planning milestones by grade and student group (for example, % with a postsecondary plan, % who completed an interest inventory): [PASTE TABLE]
+
+Identify grades or groups falling behind, suggest likely reasons to check, and recommend caseload-wide actions to close the gap before [DATE].` }
+    ]
+  },
+  {
+    id: "ny-messaging", title: "NY Inspires messaging for families and boards", std: ["PF8", "DS5", "PA4"], ny: true,
+    blurb: "Plain-language explanations of NY Inspires and the Portrait of a Graduate for parents, staff and your board.",
+    prompts: [
+      { t: "Family explainer: NY Inspires and the Portrait", type: "comm", std: ["DS5", "PF8"], pog: ALL6,
+        text: `${COACH}
+{ctx}
+${POG_NOTE}
+
+Write a one-page explainer for families on NY Inspires and the Portrait of a Graduate. Plain language (grade 6 reading level), warm tone. Cover: what the Portrait is, the six attributes in everyday words, what may change for students and when (mark every date as "per NYSED, subject to change" and leave it as [DATE] for me to verify), and how the school counseling program helps. End with three questions families can ask at home.` },
+      { t: "Board or staff briefing on counselors and the Portrait", type: "advo", std: ["PF8", "PA4", "PF7"], pog: ALL6,
+        text: `${COACH}
+{ctx}
+${POG_NOTE}
+
+Outline a 10-minute briefing for our [BOARD OF EDUCATION / STAFF] on the school counseling program's role in the Portrait of a Graduate. Include: the six attributes, where our counseling program already builds each one, what we need to prepare as state guidance arrives, and one clear request (time, staffing or PD). Slide-by-slide outline with speaker notes. Mark it as a draft alignment.` },
+      { t: "Family FAQ", type: "comm", std: ["DS5", "PF8"], pog: ALL6,
+        text: `${COACH}
+${POG_NOTE}
+
+Write eight frequently asked questions and short answers families might have about the Portrait of a Graduate and changes to New York graduation requirements. Where the answer depends on state guidance that is not final, say so plainly and point families to the school counselor. Leave any dates or requirements as [VERIFY] for me to check.` },
+      { t: "Monthly newsletter series, one attribute at a time", type: "comm", std: ["PF8", "DS5"], pog: ALL6,
+        text: `${COACH}
+{ctx}
+
+Draft six short family newsletter pieces (under 120 words each), one for each Portrait attribute. Each should explain the attribute in everyday words, give one way the school counseling program builds it at the [SCHOOL LEVEL] level, and suggest one thing families can do at home this month. Use made-up examples only.
+
+${POG_NOTE}` }
+    ]
+  }
+];
+
+// Insert NY modules after "Start here", tag every prompt.
+MODULES.splice(1, 0, ...NY_MODULES);
+MODULES.forEach((m) => m.prompts.forEach((p, i) => { if (!p.pog) p.pog = POG_MAP[m.id + "-" + i] || []; }));
+(function () {
+  "use strict";
+  const KEY = "dcs.v1";
+  const $ = (s, el = document) => el.querySelector(s);
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const LETTERS = "abcdefghijklmn";
+  const icoCopy = '<svg viewBox="0 0 20 20" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M13 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>';
+
+  const ITEMS = {};
+  const ORDER = [];
+  DOMAINS.forEach((d) => d.items.forEach((it) => { ITEMS[it.id] = { ...it, domain: d }; ORDER.push(it.id); }));
+  const ALL_PROMPTS = [];
+  MODULES.forEach((m) => m.prompts.forEach((p, i) => ALL_PROMPTS.push({ ...p, module: m, key: m.id + "-" + i })));
+  const promptsFor = (id) => ALL_PROMPTS.filter((p) => p.std.includes(id));
+
+  const EXAMPLE_R = { M1: 3, M2: 3, M3: 2, M4: 2, M5: 2, M6: 1, M7: 3, PF1: 2, PF2: 2, PF3: 3, PF4: 2, PF5: 1, PF6: 2, PF7: 1, PF8: 1, PF9: 1,
+    DS1: 2, DS2: 3, DS3: 2, DS4: 3, DS5: 2, DS6: 2, PA1: 2, PA2: 1, PA3: 1, PA4: 1, PA5: 1, PA6: 2, PA7: 0, PA8: 2 };
+
+  function exampleState() {
+    const s = blank();
+    s.example = true;
+    Object.entries(EXAMPLE_R).forEach(([id, r]) => {
+      s.ratings[id] = r;
+      const it = ITEMS[id];
+      if (it.demo) {
+        const k = Math.round((it.demo.length * r) / 3);
+        s.demo[id] = it.demo.map((_, i) => i < k);
+        const a = Math.floor((it.art.length * r) / 3);
+        s.art[id] = it.art.map((_, i) => i < a);
+      }
+    });
+    return s;
+  }
+  function blank() { return { ratings: {}, demo: {}, art: {}, notes: {}, ctx: { level: "", grades: "", caseload: "", state: "" }, example: false }; }
+
+  let S;
+  try { const raw = localStorage.getItem(KEY); S = raw ? JSON.parse(raw) : null; } catch (e) { S = null; }
+  if (!S || typeof S !== "object" || !S.ratings) S = exampleState();
+  S.ctx = Object.assign({ level: "", grades: "", caseload: "", state: "" }, S.ctx || {});
+  ["demo", "art", "notes"].forEach((k) => { if (!S[k]) S[k] = {}; });
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* storage unavailable */ } }
+
+  const newF = (o = {}) => Object.assign({ q: "", std: "all", gap: "all", types: new Set(), nb: false, pog: new Set() }, o);
+  const UI = { open: new Set(), area: "all", f: newF(), full: new Set() };
+  const pogChips = (ids) => ids.map((a) => `<span class="tag pog" title="${esc(POG_BY_ID[a].name)}">${esc(POG_BY_ID[a].name)}</span>`).join("");
+
+  // ---------- helpers ----------
+  const rating = (id) => (S.ratings[id] === undefined ? null : S.ratings[id]);
+  const lvlName = (r) => (r === null ? "Not rated" : LEVELS[r].name);
+  const pill = (r) => `<span class="pill pill-${r === null ? "n" : r}">${r === null ? "Not rated" : r + " · " + LEVELS[r].name}</span>`;
+  const done = (id, kind) => (S[kind][id] || []).filter(Boolean).length;
+
+  function fill(text) {
+    let t = text.replace(/\{ctx\}/g, CTX);
+    const c = S.ctx;
+    if (c.level.trim()) t = t.split("[SCHOOL LEVEL]").join(c.level.trim());
+    if (c.grades.trim()) t = t.split("[GRADE BAND]").join(c.grades.trim());
+    if (c.caseload.trim()) t = t.split("[CASELOAD]").join(c.caseload.trim());
+    if (c.state.trim()) t = t.split("[STATE]").join(c.state.trim());
+    return t;
+  }
+  const highlight = (t) => esc(t).replace(/\[[^\]\n]{1,120}\]/g, (m) => `<mark class="ph">${m}</mark>`);
+
+  const PRIV = "Privacy: do not include student names, ID numbers or any details that could identify a student.";
+  const withPriv = (t) => (/identif/i.test(t) ? t : t + "\n\n" + PRIV);
+  function toast(msg) {
+    const el = $("#toast"); el.textContent = msg; el.classList.add("show");
+    clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("show"), 1800);
+  }
+  function copy(text, msg) {
+    const fallback = () => { $("#sheetText").value = text; $("#sheet").hidden = false; const ta = $("#sheetText"); ta.focus(); ta.select(); };
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => toast(msg || "Copied. Paste it into your AI tool."), fallback);
+      } else fallback();
+    } catch (e) { fallback(); }
+  }
+  $("#sheetClose").addEventListener("click", () => { $("#sheet").hidden = true; });
+
+  // ---------- path to distinguished ----------
+  function pathHTML(id) {
+    const it = ITEMS[id];
+    const r = rating(id);
+    const n = promptsFor(id).length;
+    let lead;
+    if (r === null) lead = "Rate yourself on this standard to see your next steps.";
+    else if (r === 0) lead = "Start with the foundation. Put one demonstration element in place this month and use a prompt to draft your first artifact.";
+    else if (r === 1) lead = "Move from occasional to consistent. Put every demonstration element into regular practice and collect at least one artifact for each.";
+    else if (r === 2) lead = "You're proficient. Distinguished means showing impact and leading: data that shows results for students, and sharing the practice beyond your own caseload.";
+    else lead = "You're distinguished here. Keep artifacts current, mentor a colleague, and present your results to staff, families or other counselors.";
+    let html = `<div class="path"><h4>Path to Distinguished</h4><p>${esc(lead)}</p>`;
+    if (it.demo) {
+      const d = S.demo[id] || [];
+      const gaps = it.demo.map((t, i) => ({ t, i })).filter((x) => !d[x.i]);
+      const a = S.art[id] || [];
+      const artGaps = it.art.map((t, i) => ({ t, i })).filter((x) => !a[x.i]);
+      if (gaps.length) html += `<div><h4>Put in practice</h4><ul>${gaps.slice(0, 4).map((g) => `<li>${esc(g.t)}</li>`).join("")}${gaps.length > 4 ? `<li class="muted">and ${gaps.length - 4} more unchecked above</li>` : ""}</ul></div>`;
+      if (artGaps.length) html += `<div><h4>Evidence to collect</h4><ul>${artGaps.slice(0, 3).map((g) => `<li>${esc(g.t)}</li>`).join("")}${artGaps.length > 3 ? `<li class="muted">and ${artGaps.length - 3} more</li>` : ""}</ul></div>`;
+      if (r !== null && r >= 2) html += `<div><h4>Show impact</h4><ul><li>Collect participation, Mindsets &amp; Behaviors and outcome data for this work.</li><li>Share results with your administrator, advisory council or colleagues.</li></ul></div>`;
+    } else {
+      html += `<div><h4>Show it in practice</h4><ul><li>Name one recent decision where this belief shaped what you did.</li><li>Point to one artifact, such as a beliefs statement, lesson or data report, where it is visible.</li></ul></div>`;
+    }
+    if (CROSSWALK[id]) html += `<div><h4>Builds in students · NY Portrait (draft)</h4><div class="tags" style="margin-top:6px">${pogChips(CROSSWALK[id])}</div></div>`;
+    html += `<div><button class="btn btn-primary" type="button" data-act="goprompts" data-id="${id}">Open ${n} prompt${n === 1 ? "" : "s"} for ${id}</button></div></div>`;
+    return html;
+  }
+
+  // ---------- overview ----------
+  function nextMoves() {
+    return ORDER.filter((id) => rating(id) !== null && rating(id) < 3)
+      .map((id) => {
+        const it = ITEMS[id];
+        const ratio = it.demo ? done(id, "demo") / it.demo.length : 0.5;
+        return { id, r: rating(id), ratio };
+      })
+      .sort((a, b) => a.r - b.r || a.ratio - b.ratio)
+      .slice(0, 3);
+  }
+
+  function growthPrompt() {
+    const lines = [];
+    lines.push(COACH);
+    lines.push(CTX);
+    lines.push("");
+    lines.push("Here is my self-appraisal on the ASCA School Counselor Performance Appraisal (0 = Unsatisfactory, 1 = Developing, 2 = Proficient, 3 = Distinguished):");
+    DOMAINS.forEach((d) => {
+      lines.push("");
+      lines.push(d.label + (d.id === "PB" ? " (Mindsets)" : "") + ":");
+      d.items.forEach((it) => { const r = rating(it.id); lines.push(`- ${it.id} ${it.short}: ${r === null ? "not rated" : r + " (" + LEVELS[r].name + ")"}`); });
+    });
+    const gaps = ORDER.filter((id) => ITEMS[id].demo && rating(id) !== null && rating(id) < 3);
+    if (gaps.length) {
+      lines.push("");
+      lines.push("Demonstration elements I have not yet put in place, for standards below Distinguished:");
+      gaps.forEach((id) => {
+        const it = ITEMS[id]; const d = S.demo[id] || [];
+        const miss = it.demo.filter((_, i) => !d[i]);
+        if (miss.length) lines.push(`- ${id} ${it.short}: ${miss.join("; ")}`);
+      });
+    }
+    lines.push("");
+    lines.push("Build me a 90-day growth plan toward Distinguished. Choose the three highest-leverage standards and explain why. For each, give weekly actions, the artifacts I will produce, the data I will collect, and a check-in date. Then write a one-paragraph summary I could share with my supervisor. Ask me up to three clarifying questions first if you need them.");
+    return fill(lines.join("\n"));
+  }
+
+  function renderOverview() {
+    const rated = ORDER.filter((id) => rating(id) !== null);
+    const counts = [0, 0, 0, 0];
+    rated.forEach((id) => counts[rating(id)]++);
+    const avg = rated.length ? (rated.reduce((s, id) => s + rating(id), 0) / rated.length) : null;
+    const total = ORDER.length;
+    const dist = counts.map((c, i) => c ? `<i class="bg-${i}" style="width:${(c / total) * 100}%" title="${LEVELS[i].name}: ${c}"></i>` : "").join("");
+    const areas = DOMAINS.map((d) => {
+      const rs = d.items.map((it) => rating(it.id)).filter((r) => r !== null);
+      const a = rs.length ? (rs.reduce((x, y) => x + y, 0) / rs.length).toFixed(1) : "–";
+      return `<div class="area-row"><div class="area-top"><b>${esc(d.label)}</b><span class="avg">avg ${a} · ${rs.length}/${d.items.length} rated</span></div>
+        <div class="tiles">${d.items.map((it) => { const r = rating(it.id); return `<button class="tile bg-${r === null ? "n" : r}" type="button" data-act="openstd" data-id="${it.id}" title="${esc(it.id + " " + it.short + ": " + lvlName(r))}" aria-label="${esc(it.id + " " + it.short + ", " + lvlName(r))}">${it.id}</button>`; }).join("")}</div></div>`;
+    }).join("");
+    const moves = nextMoves();
+    const movesHTML = moves.length ? moves.map((m) => {
+      const it = ITEMS[m.id];
+      let next;
+      if (it.demo) { const d = S.demo[m.id] || []; const i = it.demo.findIndex((_, k) => !d[k]); next = i >= 0 ? it.demo[i] : "Collect impact data and share your results to reach Distinguished."; }
+      else next = "Show this belief in a visible practice or artifact.";
+      return `<article class="move"><div class="tags"><span class="code" style="color:var(--accent)">${m.id}</span>${pill(m.r)}</div>
+        <h3>${esc(it.short)}</h3><p class="next"><span class="muted">Next:</span> ${esc(next)}</p>
+        <div class="actions"><button class="btn" type="button" data-act="openstd" data-id="${m.id}">See the path</button><button class="btn btn-ghost" type="button" data-act="goprompts" data-id="${m.id}">Prompts</button></div></article>`;
+    }).join("") : `<p class="muted">Rate a few standards in the Self-appraisal tab and your three highest-leverage next moves will appear here.</p>`;
+
+    $("#view-overview").innerHTML = `
+      <div class="hero">
+        <div class="panel">
+          <div class="eyebrow">Where you stand</div>
+          <h2 id="ov-h" style="margin-top:6px">Your appraisal at a glance</h2>
+          <div class="stats">
+            <div class="stat"><b>${rated.length}<span style="font-size:1rem;color:var(--muted)">/${total}</span></b><span>standards rated</span></div>
+            <div class="stat"><b>${avg === null ? "–" : avg.toFixed(1)}</b><span>average on 0–3</span></div>
+            <div class="stat"><b>${counts[3]}</b><span>at Distinguished</span></div>
+          </div>
+          <div class="dist" role="img" aria-label="${counts.map((c, i) => LEVELS[i].name + " " + c).join(", ")}, not rated ${total - rated.length}">${dist}</div>
+          <div class="legend">${LEVELS.map((l, i) => `<span><i class="dot bg-${i}"></i>${l.n} ${l.name} · ${counts[i]}</span>`).join("")}<span><i class="dot bg-n"></i>Not rated · ${total - rated.length}</span></div>
+        </div>
+        <div class="panel">
+          <div class="eyebrow">Every standard</div>
+          <p class="muted" style="margin:6px 0 12px;font-size:.9rem">Tap a tile to open that standard.</p>
+          ${areas}
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Your next three moves</h2><span class="muted" style="font-size:.9rem">Lowest ratings first, then fewest elements in place</span></div>
+        <div class="moves">${movesHTML}</div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><div><div class="eyebrow">Your AI coach</div><h2 style="margin-top:6px">Turn your ratings into a 90-day plan</h2></div>
+          <button class="btn btn-primary" type="button" data-act="copygrowth">${icoCopy} Copy my growth-plan prompt</button></div>
+        <p class="muted" style="margin-bottom:10px;font-size:.93rem">This prompt carries your ratings and the elements you haven't checked yet. Paste it into ChatGPT, Claude, Gemini or NotebookLM. It contains no student information.</p>
+        <div class="planbox">${highlight(growthPrompt())}</div>
+      </div>`;
+  }
+
+  // ---------- appraisal ----------
+  function stdCard(id) {
+    const it = ITEMS[id];
+    const r = rating(id);
+    const open = UI.open.has(id);
+    const seg = LEVELS.map((l) => `<button type="button" data-act="rate" data-id="${id}" data-v="${l.n}" aria-pressed="${r === l.n}" title="${l.n} = ${l.name}">${l.n}</button>`).join("");
+    let body = "";
+    if (open) {
+      let left = "";
+      if (it.demo) {
+        const d = S.demo[id] || []; const a = S.art[id] || [];
+        const dn = d.filter(Boolean).length; const an = a.filter(Boolean).length;
+        left = `<div><h3>Demonstration includes</h3><p class="muted" style="font-size:.86rem">Check what you can show evidence of. ${dn} of ${it.demo.length} in place.</p>
+            <div class="meter"><i style="width:${(dn / it.demo.length) * 100}%"></i></div>
+            <ul class="checks">${it.demo.map((t, i) => `<li><label><input type="checkbox" id="d-${id}-${i}" data-act="demo" data-id="${id}" data-i="${i}" ${d[i] ? "checked" : ""}><span class="lt">${LETTERS[i]}.</span><span>${esc(t)}</span></label></li>`).join("")}</ul></div>
+          <div><h3>Artifacts may include</h3><p class="muted" style="font-size:.86rem">Check the artifacts you already have. ${an} of ${it.art.length}.</p>
+            <ul class="checks">${it.art.map((t, i) => `<li><label><input type="checkbox" id="a-${id}-${i}" data-act="art" data-id="${id}" data-i="${i}" ${a[i] ? "checked" : ""}><span class="lt">${LETTERS[i]}.</span><span>${esc(t)}</span></label></li>`).join("")}</ul></div>`;
+      } else {
+        left = `<div><h3>Mindset</h3><p style="margin-top:6px">${esc(it.text)}.</p><p class="muted" style="font-size:.9rem;margin-top:8px">The appraisal rates each professional belief on the same 0–3 scale. Evidence is how the belief shows up in your decisions, programs and artifacts.</p></div>`;
+      }
+      left += `<div><label class="fieldlabel" for="n-${id}">My evidence notes</label><textarea id="n-${id}" data-act="note" data-id="${id}" placeholder="What you did, when, and where the artifact lives. No student names.">${esc(S.notes[id] || "")}</textarea></div>`;
+      body = `<div class="std-body"><div style="display:grid;gap:18px;align-content:start;min-width:0">${left}</div>${pathHTML(id)}</div>`;
+    }
+    return `<article class="std${open ? " open" : ""}" id="std-${id}" data-r="${r === null ? "" : r}">
+      <div class="std-head">
+        <button class="std-title" type="button" data-act="toggle" data-id="${id}" aria-expanded="${open}">
+          <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M7 4l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="code">${id}</span>
+          <span class="txt"><b>${esc(it.short)}</b><span>${esc(it.text)}</span></span>
+        </button>
+        <div class="rate"><div class="seg" role="group" aria-label="Rate ${esc(it.short)}">${seg}</div><span class="lvl" style="color:var(--${r === null ? "muted" : "l" + r})">${lvlName(r)}</span></div>
+      </div>${body}</article>`;
+  }
+
+  function renderAppraisal() {
+    const doms = UI.area === "all" ? DOMAINS : DOMAINS.filter((d) => d.id === UI.area);
+    const nav = [`<button class="chip" type="button" data-act="area" data-a="all" aria-pressed="${UI.area === "all"}">All areas</button>`]
+      .concat(DOMAINS.map((d) => `<button class="chip" type="button" data-act="area" data-a="${d.id}" aria-pressed="${UI.area === d.id}">${esc(d.label)}</button>`)).join("");
+    $("#view-appraisal").innerHTML = `
+      <div class="panel">
+        <div class="panel-head"><div><div class="eyebrow">Self-appraisal</div><h2 style="margin-top:6px">Rate yourself, standard by standard</h2></div>
+          <div class="legend" style="margin:0">${LEVELS.map((l, i) => `<span><i class="dot bg-${i}"></i>${l.n} ${l.name}</span>`).join("")}</div></div>
+        <p class="muted" style="font-size:.93rem;max-width:70ch">Tap a standard to open its demonstration elements and artifacts. Check what you can show, add notes, and follow the path to Distinguished.</p>
+        <div class="area-nav" style="margin-top:12px">${nav}</div>
+      </div>
+      ${doms.map((d) => `<section class="area-block" id="area-${d.id}">
+        <header><h2>${esc(d.label)}</h2><span class="eyebrow">${esc(d.sub)} · ${d.items.length} rated items</span></header>
+        ${d.items.map((it) => stdCard(it.id)).join("")}
+      </section>`).join("")}`;
+  }
+
+  function rerenderStd(id) {
+    const el = document.getElementById("std-" + id);
+    if (el) { const tmp = document.createElement("div"); tmp.innerHTML = stdCard(id); el.replaceWith(tmp.firstElementChild); }
+  }
+
+  // ---------- prompts ----------
+  function matches(p) {
+    const f = UI.f;
+    if (f.std !== "all") {
+      if (f.std.startsWith("D:")) { const d = f.std.slice(2); if (!p.std.some((s) => ITEMS[s].domain.id === d)) return false; }
+      else if (!p.std.includes(f.std)) return false;
+    }
+    if (f.gap !== "all") {
+      const ok = p.std.some((s) => { const r = rating(s); return f.gap === "unrated" ? r === null : f.gap === "priority" ? (r !== null && r <= 1) : (r !== null && r < 3); });
+      if (!ok) return false;
+    }
+    if (f.types.size && !f.types.has(p.type)) return false;
+    if (f.nb && !p.nb) return false;
+    if (f.pog.size && !p.pog.some((a) => f.pog.has(a))) return false;
+    if (f.nyOnly && !p.module.ny) return false;
+    if (f.q) { const q = f.q.toLowerCase(); if (!(p.t + " " + p.text + " " + p.module.title + " " + p.pog.map((a) => POG_BY_ID[a].name).join(" ")).toLowerCase().includes(q)) return false; }
+    return true;
+  }
+
+  function promptCard(p) {
+    const full = UI.full.has(p.key);
+    return `<article class="pcard">
+      <div class="pcard-top"><h3>${esc(p.t)}</h3></div>
+      <div class="tags"><span class="tag t-type">${esc(TYPES[p.type])}</span>${p.std.map((s) => `<button type="button" class="tag std-tag" data-act="stdfilter" data-id="${s}" title="${esc(ITEMS[s].short)}">${s}</button>`).join("")}${p.nb ? `<span class="tag">NotebookLM tip</span>` : ""}</div>
+      ${p.pog.length ? `<div class="tags"><span class="pog-lbl">Builds</span>${pogChips(p.pog)}</div>` : ""}
+      <div class="ptext${full ? " full" : ""}">${highlight(fill(p.text))}</div>
+      ${p.nb ? `<p class="nb"><b>Tool tip:</b> ${esc(p.nb)}</p>` : ""}
+      <p class="priv">No student names or identifying details. Use grade bands, aggregate data or a made-up example.</p>
+      <div class="pcard-foot"><button class="btn btn-ghost" type="button" data-act="expand" data-k="${p.key}">${full ? "Show less" : "Show full prompt"}</button>
+        <button class="btn btn-primary" type="button" data-act="copyp" data-k="${p.key}">${icoCopy} Copy prompt</button></div>
+    </article>`;
+  }
+
+  function renderPromptResults() {
+    const list = ALL_PROMPTS.filter(matches);
+    const mods = MODULES.map((m) => ({ m, ps: list.filter((p) => p.module === m) })).filter((x) => x.ps.length);
+    $("#pcount").textContent = `${list.length} prompt${list.length === 1 ? "" : "s"} in ${mods.length} module${mods.length === 1 ? "" : "s"}`;
+    $("#presults").innerHTML = mods.length ? mods.map(({ m, ps }) => {
+      const codes = m.std.filter((s) => ITEMS[s]);
+      const rs = codes.map(rating).filter((r) => r !== null);
+      const low = rs.length ? Math.min(...rs) : null;
+      return `<section class="module"><header><div class="row"><h2>${esc(m.title)}</h2>${m.ny ? `<span class="pill pill-ny">NY Inspires · draft alignment</span>` : m.id === "start" || m.id === "mindsets" ? "" : pill(low)}</div>
+        <p class="muted" style="font-size:.93rem">${esc(m.blurb)}</p></header><div class="cards">${ps.map(promptCard).join("")}</div></section>`;
+    }).join("") : `<div class="panel empty"><p>No prompts match these filters.</p><p style="margin-top:10px"><button class="btn" type="button" data-act="resetf">Clear filters</button></p></div>`;
+  }
+
+  function stdOptions() {
+    let o = `<option value="all">All standards</option>`;
+    DOMAINS.forEach((d) => {
+      o += `<optgroup label="${esc(d.label)}"><option value="D:${d.id}">All of ${esc(d.label)}</option>`;
+      d.items.forEach((it) => { o += `<option value="${it.id}">${it.id} · ${esc(it.short)}</option>`; });
+      o += `</optgroup>`;
+    });
+    return o;
+  }
+
+  function renderPrompts() {
+    const f = UI.f; const c = S.ctx;
+    $("#view-prompts").innerHTML = `
+      <div class="notice" role="note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l10 18H2L12 3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 10v5M12 18h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <p><b>Protect student privacy.</b> Never paste student names, ID numbers, or details that could identify a student into an AI tool. Use aggregate or de-identified data and follow your district's AI and data policies. Check AI output before you use it; it can be wrong or out of date.</p></div>
+      <div class="panel">
+        <div class="panel-head"><div><div class="eyebrow">Prompt library</div><h2 style="margin-top:6px">${MODULES.length} modules, ${ALL_PROMPTS.length} ready-to-copy prompts</h2></div></div>
+        <p class="muted" style="font-size:.93rem;max-width:72ch;margin-bottom:12px">Each prompt works in ChatGPT, Claude, Gemini and NotebookLM. Highlighted <mark class="ph">[BRACKETS]</mark> are yours to fill in. Add your context once and it fills in everywhere.</p>
+        <details class="ctx"${c.level || c.grades || c.caseload || c.state ? "" : " open"}><summary>My context (fills in prompts automatically)</summary>
+          <div class="ctx-grid">
+            <div><label class="fieldlabel" for="cx-level">School level</label><input type="text" id="cx-level" data-ctx="level" value="${esc(c.level)}" placeholder="e.g., high school"></div>
+            <div><label class="fieldlabel" for="cx-grades">Grades served</label><input type="text" id="cx-grades" data-ctx="grades" value="${esc(c.grades)}" placeholder="e.g., 9–12"></div>
+            <div><label class="fieldlabel" for="cx-caseload">Caseload</label><input type="text" id="cx-caseload" data-ctx="caseload" value="${esc(c.caseload)}" placeholder="e.g., 280"></div>
+            <div><label class="fieldlabel" for="cx-state">State</label><input type="text" id="cx-state" data-ctx="state" value="${esc(c.state)}" placeholder="e.g., New York"></div>
+          </div></details>
+        <div class="filters" style="margin-top:14px">
+          <div><label class="fieldlabel" for="f-q">Search</label><input type="search" id="f-q" value="${esc(f.q)}" placeholder="e.g., advisory council, financial aid"></div>
+          <div><label class="fieldlabel" for="f-std">Standard</label><select id="f-std">${stdOptions()}</select></div>
+          <div><label class="fieldlabel" for="f-gap">Rating gap</label><select id="f-gap">
+            <option value="all">Any rating</option><option value="growth">My growth areas (rated 0–2)</option>
+            <option value="priority">My priorities (rated 0–1)</option><option value="unrated">Standards I haven't rated</option></select></div>
+        </div>
+        <div style="margin-top:12px"><span class="fieldlabel">Task type</span><div class="typechips">${Object.entries(TYPES).map(([k, v]) => `<button class="chip" type="button" data-act="type" data-t="${k}" aria-pressed="${f.types.has(k)}">${esc(v)}</button>`).join("")}</div></div>
+        <div style="margin-top:12px"><span class="fieldlabel">NY Portrait of a Graduate attribute <span class="pill pill-ny" style="margin-left:4px">draft</span></span><div class="typechips">${POG.map((a) => `<button class="chip" type="button" data-act="pogf" data-a="${a.id}" aria-pressed="${f.pog.has(a.id)}">${esc(a.name)}</button>`).join("")}</div></div>
+        <div class="filterbar" style="margin-top:12px"><label class="toggle"><input type="checkbox" id="f-nb" ${f.nb ? "checked" : ""}> Only prompts with NotebookLM and tool tips</label>
+          <span><span id="pcount" class="muted" style="font-size:.9rem"></span> <button class="btn btn-ghost" type="button" data-act="resetf">Clear filters</button></span></div>
+      </div>
+      ${f.nyOnly ? `<div class="banner"><span>Showing only the NY Inspires modules (draft alignment).</span><button class="btn" type="button" data-act="resetf">Show all prompts</button></div>` : ""}
+      <div id="presults" class="view"></div>`;
+    $("#f-std").value = f.std; $("#f-gap").value = f.gap;
+    renderPromptResults();
+  }
+
+  // ---------- guide ----------
+  function renderGuide() {
+    $("#view-guide").innerHTML = `
+      <div class="panel prose">
+        <div class="eyebrow">How it works</div>
+        <h2>The appraisal is the brain</h2>
+        <p>Every standard, demonstration element and artifact on this page comes from the ASCA School Counselor Performance Appraisal: seven professional beliefs and 23 professional responsibilities across Professional Foundation, Direct and Indirect Student Services, and Planning and Assessment. Each is rated on the same scale.</p>
+        <div class="scale">${LEVELS.map((l, i) => `<div><span>${pill(i)}</span><span>${["Little or no evidence that the standard is in practice.", "Some elements are in place, used occasionally or inconsistently.", "The elements are in regular practice and documented with artifacts.", "All elements are in practice, documented, backed by results data, and shared or led beyond your own caseload."][i]}</span></div>`).join("")}</div>
+        <p>For New York counselors, every prompt is also tagged with the NY Portrait of a Graduate attributes it helps build. That alignment is a draft until NYSED releases its competency guidance.</p>
+        <p class="muted" style="font-size:.9rem">The appraisal names the four levels but doesn't describe them, so the descriptions above are this dashboard's working guide. If your district uses its own rubric, use that.</p>
+      </div>
+      <div class="panel">
+        <div class="eyebrow">Using the prompts</div>
+        <h2 style="margin:6px 0 12px">Works with the AI tool you already use</h2>
+        <div class="tools">
+          <div class="tool"><h3>ChatGPT</h3><p>Create a Project (or a custom GPT), attach the appraisal PDF, and paste the "Custom instructions for a counseling coach" prompt as its instructions. Then use any module prompt inside it.</p></div>
+          <div class="tool"><h3>Claude</h3><p>Create a Project, add the appraisal PDF to its knowledge, and paste the coach instructions as the project instructions. Long prompts and pasted documents work well here.</p></div>
+          <div class="tool"><h3>Gemini</h3><p>Create a Gem with the coach instructions and attach the appraisal. If your district uses Google Workspace, you can work from documents already in Drive.</p></div>
+          <div class="tool"><h3>NotebookLM</h3><p>Upload the appraisal plus your own de-identified artifacts as sources. Answers then cite only your sources, which makes it ideal for mapping evidence to standards. Filter for prompts with NotebookLM tips.</p></div>
+        </div>
+      </div>
+      <div class="panel prose">
+        <div class="eyebrow">Ground rules</div>
+        <h2>Use AI the way you'd want students to</h2>
+        <ul>
+          <li>Never paste student names, ID numbers, or details that could identify a student. Use aggregate or de-identified data.</li>
+          <li>Follow your district's AI acceptable use policy and use district-approved tools for anything involving student data.</li>
+          <li>Check every fact, law, date, statistic and citation. AI can be confidently wrong or out of date.</li>
+          <li>Keep your professional judgment in charge. AI drafts; you decide.</li>
+          <li>Translations for families should be reviewed by a qualified human translator before they go out.</li>
+        </ul>
+      </div>
+      <div class="panel prose">
+        <div class="eyebrow">Your data</div>
+        <h2>What this page keeps</h2>
+        <p>Your ratings, checklists, notes and context are saved only in this browser on this device. Nothing is sent anywhere. Clearing your browser data removes them.</p>
+        <p><button class="btn" type="button" data-act="reset" id="resetBtn">Clear all my ratings and notes</button></p>
+      </div>`;
+  }
+
+  // ---------- portrait ----------
+  function renderPortrait() {
+    const counts = Object.fromEntries(POG.map((a) => [a.id, ALL_PROMPTS.filter((p) => p.pog.includes(a.id)).length]));
+    const nyCount = ALL_PROMPTS.filter((p) => p.module.ny).length;
+    const rows = DOMAINS.map((d) => `<tr class="grp"><th colspan="${POG.length + 1}">${esc(d.label)}</th></tr>` + d.items.map((it) => {
+      const cw = CROSSWALK[it.id] || [];
+      return `<tr><th scope="row"><button type="button" class="cw-std" data-act="goprompts" data-id="${it.id}"><span class="code">${it.id}</span> ${esc(it.short)}</button></th>${POG.map((a) => `<td>${cw.includes(a.id) ? `<span class="cw-dot" title="${esc(it.id + " builds " + a.name)}" aria-label="yes"></span>` : `<span class="sr">no</span>`}</td>`).join("")}</tr>`;
+    }).join("")).join("");
+    $("#view-portrait").innerHTML = `
+      <div class="notice" role="note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l10 18H2L12 3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 10v5M12 18h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <p><b>Draft alignment.</b> New York's competency guidance and rubrics are still to come from NYSED, and changes to graduation requirements are proposed until the Board of Regents approves them. The new system is planned to apply first to students entering grade 9 in 2029–30. The tags and crosswalk here are a starting point for local work, not official guidance.</p></div>
+      <div class="panel">
+        <div class="eyebrow">NY Inspires</div>
+        <h2 style="margin:6px 0 8px">New York State Portrait of a Graduate</h2>
+        <p class="muted" style="font-size:.93rem;max-width:72ch;margin-bottom:14px">Six attributes every graduate should show. Each prompt in the library is tagged with the attributes it helps build, so counselors can see their part in the Portrait.</p>
+        <div class="pog-grid">${POG.map((a) => `<article class="pog-card"><h3>${esc(a.name)}</h3><p class="muted" style="font-size:.9rem">${esc(a.desc)}</p><button class="btn" type="button" data-act="pogprompts" data-a="${a.id}">${counts[a.id]} prompts</button></article>`).join("")}</div>
+        <p style="margin-top:14px"><button class="btn btn-primary" type="button" data-act="nymods">Open the ${nyCount} NY Inspires prompts</button></p>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><div><div class="eyebrow">Crosswalk · draft</div><h2 style="margin-top:6px">ASCA appraisal standards and the Portrait</h2></div></div>
+        <p class="muted" style="font-size:.9rem;max-width:72ch;margin-bottom:10px">A dot means the counselor's work on that standard helps build the attribute in students. Tap a standard to see its prompts.</p>
+        <div class="cw-wrap"><table class="cw"><thead><tr><th scope="col">Standard</th>${POG.map((a) => `<th scope="col" title="${esc(a.name)}"><span>${esc(a.short)}</span></th>`).join("")}</tr></thead><tbody>${rows}</tbody></table></div>
+      </div>`;
+  }
+
+  // ---------- routing ----------
+  const VIEWS = ["overview", "appraisal", "prompts", "portrait", "guide"];
+  const RENDER = { overview: renderOverview, appraisal: renderAppraisal, prompts: renderPrompts, portrait: renderPortrait, guide: renderGuide };
+  let current = null;
+  function show(view, opts = {}) {
+    if (!VIEWS.includes(view)) view = "overview";
+    current = view;
+    VIEWS.forEach((v) => { $("#view-" + v).hidden = v !== view; });
+    document.querySelectorAll(".tab").forEach((t) => t.setAttribute("aria-current", t.dataset.view === view ? "page" : "false"));
+    RENDER[view]();
+    $("#exampleBanner").hidden = !S.example;
+    if (!opts.keepScroll) window.scrollTo(0, 0);
+  }
+  function go(view) { if (location.hash !== "#" + view) location.hash = view; else show(view); }
+  window.addEventListener("hashchange", () => show(location.hash.slice(1)));
+
+  // ---------- events ----------
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-act]");
+    if (!b) return;
+    const act = b.dataset.act; const id = b.dataset.id;
+    if (act === "rate") {
+      const v = +b.dataset.v;
+      if (S.ratings[id] === v) delete S.ratings[id]; else S.ratings[id] = v;
+      save(); rerenderStd(id);
+    } else if (act === "toggle") {
+      UI.open.has(id) ? UI.open.delete(id) : UI.open.add(id); rerenderStd(id);
+    } else if (act === "openstd") {
+      UI.open.add(id); UI.area = "all"; go("appraisal");
+      setTimeout(() => { const el = document.getElementById("std-" + id); if (el) el.scrollIntoView({ block: "start" }); }, 30);
+    } else if (act === "area") {
+      UI.area = b.dataset.a; renderAppraisal();
+    } else if (act === "goprompts") {
+      UI.f = newF({ std: id }); go("prompts");
+    } else if (act === "stdfilter") {
+      UI.f.std = id; $("#f-std").value = id; renderPromptResults(); $("#view-prompts").scrollIntoView({ block: "start" });
+    } else if (act === "type") {
+      const t = b.dataset.t; UI.f.types.has(t) ? UI.f.types.delete(t) : UI.f.types.add(t);
+      b.setAttribute("aria-pressed", UI.f.types.has(t)); renderPromptResults();
+    } else if (act === "pogf") {
+      const a = b.dataset.a; UI.f.pog.has(a) ? UI.f.pog.delete(a) : UI.f.pog.add(a);
+      b.setAttribute("aria-pressed", UI.f.pog.has(a)); renderPromptResults();
+    } else if (act === "pogprompts") {
+      UI.f = newF({ pog: new Set([b.dataset.a]) }); go("prompts");
+    } else if (act === "nymods") {
+      UI.f = newF({ q: "" }); UI.f.nyOnly = true; go("prompts");
+    } else if (act === "resetf") {
+      UI.f = newF(); renderPrompts();
+    } else if (act === "expand") {
+      const k = b.dataset.k; UI.full.has(k) ? UI.full.delete(k) : UI.full.add(k);
+      const card = b.closest(".pcard"); const p = ALL_PROMPTS.find((x) => x.key === k);
+      const tmp = document.createElement("div"); tmp.innerHTML = promptCard(p); card.replaceWith(tmp.firstElementChild);
+    } else if (act === "copyp") {
+      const p = ALL_PROMPTS.find((x) => x.key === b.dataset.k); copy(withPriv(fill(p.text)));
+    } else if (act === "copygrowth") {
+      copy(growthPrompt(), "Growth-plan prompt copied.");
+    } else if (act === "reset") {
+      if (b.dataset.armed === "1") { S = blank(); save(); UI.open.clear(); toast("Cleared. Start your appraisal."); go("appraisal"); }
+      else { b.dataset.armed = "1"; b.textContent = "Tap again to clear everything"; setTimeout(() => { if (b.isConnected) { b.dataset.armed = ""; b.textContent = "Clear all my ratings and notes"; } }, 4000); }
+    }
+  });
+  $("#clearExample").addEventListener("click", () => { const ctx = S.ctx; S = blank(); S.ctx = ctx; save(); UI.open.clear(); toast("Examples cleared. Rate your first standard."); go("appraisal"); });
+
+  document.addEventListener("change", (e) => {
+    const t = e.target;
+    if (t.dataset.act === "demo" || t.dataset.act === "art") {
+      const id = t.dataset.id; const it = ITEMS[id]; const kind = t.dataset.act;
+      const arr = S[kind][id] || it[kind === "demo" ? "demo" : "art"].map(() => false);
+      arr[+t.dataset.i] = t.checked; S[kind][id] = arr; save();
+      const y = window.scrollY; rerenderStd(id); window.scrollTo(0, y);
+      const again = document.getElementById(t.id); if (again) again.focus({ preventScroll: true });
+    } else if (t.id === "f-std") { UI.f.std = t.value; renderPromptResults(); }
+    else if (t.id === "f-gap") { UI.f.gap = t.value; renderPromptResults(); }
+    else if (t.id === "f-nb") { UI.f.nb = t.checked; renderPromptResults(); }
+  });
+  document.addEventListener("input", (e) => {
+    const t = e.target;
+    if (t.dataset.act === "note") { S.notes[t.dataset.id] = t.value; save(); }
+    else if (t.dataset.ctx) { S.ctx[t.dataset.ctx] = t.value; save(); clearTimeout(renderPromptResults.t); renderPromptResults.t = setTimeout(renderPromptResults, 200); }
+    else if (t.id === "f-q") { UI.f.q = t.value.trim(); clearTimeout(renderPromptResults.q); renderPromptResults.q = setTimeout(renderPromptResults, 150); }
+  });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("#sheet").hidden) $("#sheet").hidden = true; });
+
+  show(location.hash.slice(1) || "overview", { keepScroll: true });
+})();
+</script>
+
+</html>
