@@ -1384,6 +1384,8 @@ MODULES.forEach((m) => m.prompts.forEach((p, i) => { if (!p.pog) p.pog = POG_MAP
 
   const newF = (o = {}) => Object.assign({ q: "", std: "all", gap: "all", types: new Set(), nb: false, pog: new Set() }, o);
   const UI = { open: new Set(), area: "all", f: newF(), full: new Set() };
+  const RESET_LABEL = "Clear all results and inputs";
+  const RESET_BTN = `<button class="btn" type="button" data-act="reset" title="Clears every rating, checklist, note, context field and prompt filter">${RESET_LABEL}</button>`;
   const pogChips = (ids) => ids.map((a) => `<span class="tag pog" title="${esc(POG_BY_ID[a].name)}">${esc(POG_BY_ID[a].name)}</span>`).join("");
 
   // ---------- helpers ----------
@@ -1537,6 +1539,7 @@ MODULES.forEach((m) => m.prompts.forEach((p, i) => { if (!p.pog) p.pog = POG_MAP
           </div>
           <div class="dist" role="img" aria-label="${counts.map((c, i) => LEVELS[i].name + " " + c).join(", ")}, not rated ${total - rated.length}">${dist}</div>
           <div class="legend">${LEVELS.map((l, i) => `<span><i class="dot bg-${i}"></i>${l.n} ${l.name} · ${counts[i]}</span>`).join("")}<span><i class="dot bg-n"></i>Not rated · ${total - rated.length}</span></div>
+          <div style="margin-top:14px">${RESET_BTN}</div>
         </div>
         <div class="panel">
           <div class="eyebrow">Every standard</div>
@@ -1597,7 +1600,7 @@ MODULES.forEach((m) => m.prompts.forEach((p, i) => { if (!p.pog) p.pog = POG_MAP
     $("#view-appraisal").innerHTML = `
       <div class="panel">
         <div class="panel-head"><div><div class="eyebrow">Self-appraisal</div><h2 style="margin-top:6px">Rate yourself, standard by standard</h2></div>
-          <div class="legend" style="margin:0">${LEVELS.map((l, i) => `<span><i class="dot bg-${i}"></i>${l.n} ${l.name}</span>`).join("")}</div></div>
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px"><div class="legend" style="margin:0">${LEVELS.map((l, i) => `<span><i class="dot bg-${i}"></i>${l.n} ${l.name}</span>`).join("")}</div>${RESET_BTN}</div></div>
         <p class="muted" style="font-size:.93rem;max-width:70ch">Tap a standard to open its demonstration elements and artifacts. Check what you can show, add notes, and follow the path to Distinguished.</p>
         <div class="area-nav" style="margin-top:12px">${nav}</div>
       </div>
@@ -1737,7 +1740,7 @@ MODULES.forEach((m) => m.prompts.forEach((p, i) => { if (!p.pog) p.pog = POG_MAP
         <div class="eyebrow">Your data</div>
         <h2>What this page keeps</h2>
         <p>Your ratings, checklists, notes and context are saved only in this browser on this device. Nothing is sent anywhere. Clearing your browser data removes them.</p>
-        <p><button class="btn" type="button" data-act="reset" id="resetBtn">Clear all my ratings and notes</button></p>
+        <p>${RESET_BTN}</p>
       </div>`;
   }
 
@@ -1823,8 +1826,8 @@ MODULES.forEach((m) => m.prompts.forEach((p, i) => { if (!p.pog) p.pog = POG_MAP
     } else if (act === "copygrowth") {
       copy(growthPrompt(), "Growth-plan prompt copied.");
     } else if (act === "reset") {
-      if (b.dataset.armed === "1") { S = blank(); save(); UI.open.clear(); toast("Cleared. Start your appraisal."); go("appraisal"); }
-      else { b.dataset.armed = "1"; b.textContent = "Tap again to clear everything"; setTimeout(() => { if (b.isConnected) { b.dataset.armed = ""; b.textContent = "Clear all my ratings and notes"; } }, 4000); }
+      if (b.dataset.armed === "1") { S = blank(); save(); UI.open.clear(); UI.full.clear(); UI.area = "all"; UI.f = newF(); toast("Everything cleared. Start your appraisal."); go("appraisal"); }
+      else { b.dataset.armed = "1"; b.textContent = "Tap again to clear everything"; setTimeout(() => { if (b.isConnected) { b.dataset.armed = ""; b.textContent = RESET_LABEL; } }, 4000); }
     }
   });
   $("#clearExample").addEventListener("click", () => { const ctx = S.ctx; S = blank(); S.ctx = ctx; save(); UI.open.clear(); toast("Examples cleared. Rate your first standard."); go("appraisal"); });
